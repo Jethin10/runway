@@ -218,283 +218,370 @@ export default function SprintsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Sprints</h1>
+    <div className="min-w-0">
+      {/* Page header: clear hierarchy, single primary CTA */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-xl font-semibold text-[#0f172a] dark:text-white tracking-tight">Sprints</h1>
+          <p className="text-sm text-[#64748b] dark:text-slate-400 mt-0.5">
+            Time-boxed execution. Create a sprint, add items, lock to commit, then close when done.
+          </p>
+        </div>
         {isFounder && (
           <button
+            type="button"
             onClick={() => setShowCreate(true)}
-            className="rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90"
+            className="shrink-0 inline-flex items-center justify-center h-9 px-4 rounded-md bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] text-sm font-medium hover:bg-[#1e293b] dark:hover:bg-slate-200 transition-colors shadow-sm"
           >
             New sprint
           </button>
         )}
       </div>
 
+      {/* Create sprint: one card, clear sections */}
       {showCreate && (
         <form
           onSubmit={handleCreateSprint}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 space-y-4"
+          className="mb-10 rounded-xl border border-[#e2e8f0] dark:border-slate-700/80 bg-white dark:bg-slate-800/50 shadow-sm overflow-hidden"
         >
-          <h3 className="font-bold text-lg">Create sprint</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Week start (YYYY-MM-DD)</label>
-              <input
-                type="date"
-                value={weekStart}
-                onChange={(e) => setWeekStart(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Week end (YYYY-MM-DD)</label>
-              <input
-                type="date"
-                value={weekEnd}
-                onChange={(e) => setWeekEnd(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2"
-              />
-            </div>
+          <div className="px-6 py-5 border-b border-[#e2e8f0] dark:border-slate-700/80 bg-[#f8fafc] dark:bg-slate-800/80">
+            <h2 className="text-sm font-semibold text-[#0f172a] dark:text-white">Create sprint</h2>
+            <p className="text-xs text-[#64748b] dark:text-slate-400 mt-0.5">Set the date range and add at least one item.</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Sprint items</label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Select existing tasks or add new items (goals and tasks in one list).</p>
-            <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto mb-3">
-              {tasks.filter((t) => !t.sprintId || t.sprintId === "").map((t) => (
-                <label key={t.id} className="flex items-center gap-2 cursor-pointer">
+
+          <div className="p-6 space-y-6">
+            {/* Dates: compact row */}
+            <div>
+              <p className="text-xs font-medium text-[#64748b] dark:text-slate-400 uppercase tracking-wider mb-3">Dates</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="week-start" className="block text-xs font-medium text-[#475569] dark:text-slate-400 mb-1.5">Week start</label>
                   <input
-                    type="checkbox"
-                    checked={selectedTaskIds.includes(t.id)}
-                    onChange={() => toggleTaskInSprint(t.id)}
+                    id="week-start"
+                    type="date"
+                    value={weekStart}
+                    onChange={(e) => setWeekStart(e.target.value)}
+                    required
+                    className="w-full h-9 rounded-md border border-[#e2e8f0] dark:border-slate-600 bg-white dark:bg-slate-900 px-3 text-sm text-[#0f172a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-white/20 focus:border-[#0f172a]/40"
                   />
-                  <span className="text-sm">{t.title}</span>
-                </label>
-              ))}
-              {tasks.every((t) => t.sprintId) && tasks.length > 0 && (
-                <p className="text-xs text-gray-500">All tasks are already in a sprint.</p>
+                </div>
+                <div>
+                  <label htmlFor="week-end" className="block text-xs font-medium text-[#475569] dark:text-slate-400 mb-1.5">Week end</label>
+                  <input
+                    id="week-end"
+                    type="date"
+                    value={weekEnd}
+                    onChange={(e) => setWeekEnd(e.target.value)}
+                    required
+                    className="w-full h-9 rounded-md border border-[#e2e8f0] dark:border-slate-600 bg-white dark:bg-slate-900 px-3 text-sm text-[#0f172a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 dark:focus:ring-white/20 focus:border-[#0f172a]/40"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Sprint items: two clear blocks — existing tasks, then add new */}
+            <div>
+              <p className="text-xs font-medium text-[#64748b] dark:text-slate-400 uppercase tracking-wider mb-3">Sprint items</p>
+
+              {/* Existing tasks: bordered box, checkboxes */}
+              <div className="rounded-lg border border-[#e2e8f0] dark:border-slate-600 bg-[#f8fafc] dark:bg-slate-900/50 p-3 mb-4">
+                <p className="text-xs text-[#64748b] dark:text-slate-400 mb-2">Select from backlog</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 max-h-24 overflow-y-auto">
+                  {tasks.filter((t) => !t.sprintId || t.sprintId === "").map((t) => (
+                    <label key={t.id} className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selectedTaskIds.includes(t.id)}
+                        onChange={() => toggleTaskInSprint(t.id)}
+                        className="rounded border-[#cbd5e1] dark:border-slate-500 text-[#0f172a] dark:text-white focus:ring-[#0f172a]"
+                      />
+                      <span className="text-sm text-[#334155] dark:text-slate-300 group-hover:text-[#0f172a] dark:group-hover:text-white">{t.title}</span>
+                    </label>
+                  ))}
+                  {tasks.every((t) => t.sprintId) && tasks.length > 0 && (
+                    <p className="text-xs text-[#64748b] dark:text-slate-400">All tasks are in a sprint.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Add new item: single row, button is clearly a button */}
+              <div className="flex flex-wrap gap-2 items-end">
+                <input
+                  type="text"
+                  value={newItemTitle}
+                  onChange={(e) => setNewItemTitle(e.target.value)}
+                  placeholder="New item title"
+                  className="h-9 rounded-md border border-[#e2e8f0] dark:border-slate-600 bg-white dark:bg-slate-900 px-3 text-sm min-w-[180px] placeholder:text-[#94a3b8] dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 focus:border-[#0f172a]/40"
+                  aria-label="New item title"
+                />
+                <select
+                  value={newItemMilestoneId}
+                  onChange={(e) => setNewItemMilestoneId(e.target.value)}
+                  className="h-9 rounded-md border border-[#e2e8f0] dark:border-slate-600 bg-white dark:bg-slate-900 px-3 text-sm min-w-[160px] text-[#0f172a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 focus:border-[#0f172a]/40"
+                  aria-label="Milestone for new item"
+                >
+                  <option value="">Select milestone…</option>
+                  {milestones.map((m) => (
+                    <option key={m.id} value={m.id}>{m.title}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={addNewItem}
+                  disabled={!newItemTitle.trim() || !newItemMilestoneId || milestones.length === 0}
+                  title={milestones.length === 0 ? "Add at least one milestone on the workspace overview first" : !newItemTitle.trim() || !newItemMilestoneId ? "Enter a title and select a milestone" : "Add item"}
+                  className="h-9 px-4 rounded-md border border-[#0f172a] dark:border-white/30 bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] text-sm font-medium hover:bg-[#1e293b] dark:hover:bg-slate-200 disabled:opacity-40 disabled:pointer-events-none disabled:cursor-not-allowed transition-colors"
+                >
+                  Add item
+                </button>
+              </div>
+              {milestones.length === 0 ? (
+                <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                  Add at least one milestone on the workspace overview first.
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-[#64748b] dark:text-slate-400">
+                  Title + milestone, then click Add item.
+                </p>
+              )}
+
+              {/* New items list: card-style rows */}
+              {newItems.length > 0 && (
+                <ul className="mt-4 space-y-2">
+                  {newItems.map((item, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg bg-[#f1f5f9] dark:bg-slate-800 border border-[#e2e8f0] dark:border-slate-700"
+                    >
+                      <span className="text-sm font-medium text-[#0f172a] dark:text-white truncate">{item.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeNewItem(i)}
+                        className="shrink-0 text-xs font-medium text-[#dc2626] dark:text-red-400 hover:text-[#b91c1c] dark:hover:text-red-300 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
-            <div className="flex flex-wrap gap-2 items-end">
-              <input
-                type="text"
-                value={newItemTitle}
-                onChange={(e) => setNewItemTitle(e.target.value)}
-                placeholder="New item title"
-                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm min-w-[160px]"
-              />
-              <select
-                value={newItemMilestoneId}
-                onChange={(e) => setNewItemMilestoneId(e.target.value)}
-                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm min-w-[140px]"
+
+            {/* Form actions: primary + secondary */}
+            <div className="flex items-center gap-3 pt-2 border-t border-[#e2e8f0] dark:border-slate-700/80">
+              <button
+                type="submit"
+                disabled={creating}
+                className="h-9 px-4 rounded-md bg-[#0f172a] dark:bg-white text-white dark:text-[#0f172a] text-sm font-medium hover:bg-[#1e293b] dark:hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <option value="">Milestone</option>
-                {milestones.map((m) => (
-                  <option key={m.id} value={m.id}>{m.title}</option>
-                ))}
-              </select>
+                {creating ? "Creating…" : "Create sprint"}
+              </button>
               <button
                 type="button"
-                onClick={addNewItem}
-                disabled={!newItemTitle.trim() || !newItemMilestoneId}
-                className="rounded-lg h-9 px-3 bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 disabled:opacity-50"
+                onClick={() => setShowCreate(false)}
+                className="h-9 px-4 rounded-md border border-[#e2e8f0] dark:border-slate-600 text-sm font-medium text-[#475569] dark:text-slate-300 hover:bg-[#f1f5f9] dark:hover:bg-slate-700/50 transition-colors"
               >
-                + Add item
+                Cancel
               </button>
             </div>
-            {newItems.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {newItems.map((item, i) => (
-                  <li key={i} className="flex items-center justify-between text-sm py-1">
-                    <span>{item.title}</span>
-                    <button type="button" onClick={() => removeNewItem(i)} className="text-red-500 hover:underline">Remove</button>
+          </div>
+        </form>
+      )}
+
+      {/* Two panels: Sprint list | Sprint items */}
+      <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+        {/* Sprint list */}
+        <section className="rounded-xl border border-[#e2e8f0] dark:border-slate-700/80 bg-white dark:bg-slate-800/50 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#e2e8f0] dark:border-slate-700/80">
+            <h3 className="text-sm font-semibold text-[#0f172a] dark:text-white">Sprint list</h3>
+            <p className="text-xs text-[#64748b] dark:text-slate-400 mt-0.5">Select a sprint to view and update its items.</p>
+          </div>
+          <div className="p-5 min-h-[200px]">
+            {sprints.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm text-[#64748b] dark:text-slate-400">No sprints yet.</p>
+                <p className="text-xs text-[#94a3b8] dark:text-slate-500 mt-1">Create one to start the weekly loop.</p>
+            </div>
+            ) : (
+              <ul className="space-y-2">
+                {sprints.map((s) => (
+                  <li
+                    key={s.id}
+                    className={`rounded-lg border cursor-pointer transition-all ${
+                      selectedSprint?.id === s.id
+                        ? "border-[#0f172a] dark:border-white/40 bg-[#f1f5f9] dark:bg-slate-700/50 ring-1 ring-[#0f172a]/10 dark:ring-white/10"
+                        : "border-[#e2e8f0] dark:border-slate-700 hover:border-[#cbd5e1] dark:hover:border-slate-600 hover:bg-[#f8fafc] dark:hover:bg-slate-800/50"
+                    }`}
+                    onClick={() => setSelectedSprint(s)}
+                  >
+                    <div className="p-4">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm text-[#0f172a] dark:text-white truncate">
+                            {s.weekStartDate} → {s.weekEndDate}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <span className="text-xs text-[#64748b] dark:text-slate-400">
+                              {s.taskIds.length} item{s.taskIds.length !== 1 ? "s" : ""}
+                            </span>
+                            {s.locked && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#e2e8f0] dark:bg-slate-600 text-[#475569] dark:text-slate-300">
+                                Locked
+                              </span>
+                            )}
+                            {s.completed && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#dcfce7] dark:bg-emerald-900/40 text-[#166534] dark:text-emerald-300">
+                                Closed
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {s.completed && s.completionStats && (
+                          <span className="shrink-0 text-sm font-semibold text-[#0f172a] dark:text-white tabular-nums">
+                            {s.completionStats.completionPercentage}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {isFounder && !s.locked && !s.completed && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleLockSprint(s); }}
+                            disabled={locking}
+                            className="text-xs font-medium text-[#0f172a] dark:text-white hover:underline disabled:opacity-50"
+                          >
+                            Lock sprint
+                          </button>
+                        )}
+                        {isFounder && s.locked && !s.completed && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleCloseSprint(s); }}
+                            disabled={closing}
+                            className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline disabled:opacity-50"
+                          >
+                            Close sprint
+                          </button>
+                        )}
+                        {isFounder && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteSprint(s); }}
+                            disabled={deleting}
+                            className="text-xs font-medium text-[#dc2626] dark:text-red-400 hover:underline disabled:opacity-50"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
           </div>
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={creating}
-              className="rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold disabled:opacity-50"
-            >
-              {creating ? "Creating…" : "Create sprint"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCreate(false)}
-              className="rounded-lg h-10 px-4 bg-gray-200 dark:bg-gray-700 text-sm font-bold"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
+        </section>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <h3 className="font-bold">Sprint list</h3>
-          {sprints.length === 0 ? (
-            <p className="text-gray-500 text-sm">No sprints yet. Create one to start the weekly loop.</p>
-          ) : (
-            <ul className="space-y-2">
-              {sprints.map((s) => (
-                <li
-                  key={s.id}
-                  className={`p-4 rounded-xl border cursor-pointer transition-colors ${
-                    selectedSprint?.id === s.id
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 dark:border-gray-700 hover:border-primary/30"
-                  }`}
-                  onClick={() => setSelectedSprint(s)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold">{s.weekStartDate} → {s.weekEndDate}</p>
-                      <p className="text-xs text-gray-500">
-                        {s.taskIds.length} item{s.taskIds.length !== 1 ? "s" : ""}
-                        {s.locked && " · Locked"}
-                        {s.completed && " · Closed"}
-                      </p>
-                    </div>
-                    {s.completed && s.completionStats && (
-                      <span className="text-sm font-bold text-primary">
-                        {s.completionStats.completionPercentage}%
-                      </span>
-                    )}
-                  </div>
-                  {isFounder && !s.locked && !s.completed && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLockSprint(s);
-                      }}
-                      disabled={locking}
-                      className="mt-2 text-xs font-bold text-primary hover:underline disabled:opacity-50"
-                    >
-                      Lock sprint
-                    </button>
-                  )}
-                  {isFounder && s.locked && !s.completed && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCloseSprint(s);
-                      }}
-                      disabled={closing}
-                      className="mt-2 text-xs font-bold text-amber-600 hover:underline disabled:opacity-50"
-                    >
-                      Close sprint
-                    </button>
-                  )}
-                  {isFounder && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteSprint(s);
-                      }}
-                      disabled={deleting}
-                      className="mt-2 text-xs font-bold text-red-600 dark:text-red-400 hover:underline disabled:opacity-50 ml-2"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="font-bold">Sprint items</h3>
+        {/* Sprint items */}
+        <section className="rounded-xl border border-[#e2e8f0] dark:border-slate-700/80 bg-white dark:bg-slate-800/50 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#e2e8f0] dark:border-slate-700/80 flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-[#0f172a] dark:text-white">Sprint items</h3>
+              <p className="text-xs text-[#64748b] dark:text-slate-400 mt-0.5">
+                {selectedSprint ? `${sprintTasks.length} item${sprintTasks.length !== 1 ? "s" : ""}` : "Select a sprint"}
+              </p>
+            </div>
             {selectedSprint && sprintTasks.length > 0 && (
-              <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5">
+              <div className="flex rounded-md border border-[#e2e8f0] dark:border-slate-600 p-0.5 bg-[#f8fafc] dark:bg-slate-900/50">
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
-                  className={`px-3 py-1 text-sm font-medium rounded-md ${viewMode === "list" ? "bg-primary text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"}`}
+                  className={`px-2.5 py-1.5 text-xs font-medium rounded ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-[#0f172a] dark:text-white shadow-sm" : "text-[#64748b] dark:text-slate-400 hover:text-[#0f172a] dark:hover:text-white"}`}
                 >
                   List
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("board")}
-                  className={`px-3 py-1 text-sm font-medium rounded-md ${viewMode === "board" ? "bg-primary text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"}`}
+                  className={`px-2.5 py-1.5 text-xs font-medium rounded ${viewMode === "board" ? "bg-white dark:bg-slate-700 text-[#0f172a] dark:text-white shadow-sm" : "text-[#64748b] dark:text-slate-400 hover:text-[#0f172a] dark:hover:text-white"}`}
                 >
                   Board
                 </button>
               </div>
             )}
           </div>
-          {!selectedSprint ? (
-            <p className="text-gray-500 text-sm">Select a sprint to see and update items.</p>
-          ) : sprintTasks.length === 0 ? (
-            <p className="text-gray-500 text-sm">No items in this sprint.</p>
-          ) : viewMode === "board" ? (
-            <div className="grid grid-cols-3 gap-4">
-              {(["todo", "in_progress", "done"] as const).map((status) => (
-                <div key={status} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-white/5 p-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-                    {status === "done" ? "Done" : status === "in_progress" ? "In progress" : "To do"}
-                  </h4>
-                  <div className="space-y-2">
-                    {sprintTasks
-                      .filter((t) => t.status === status)
-                      .map((t) => (
-                        <div
-                          key={t.id}
-                          className="flex items-center justify-between p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                        >
-                          <span className="text-sm font-medium truncate">{t.title}</span>
-                          {canWrite && !selectedSprint.completed && (
-                            <select
-                              value={t.status}
-                              onChange={(e) => updateTaskStatus(t.id, e.target.value as Task["status"])}
-                              className="text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-1.5 py-0.5"
-                            >
-                              <option value="todo">To do</option>
-                              <option value="in_progress">In progress</option>
-                              <option value="done">Done</option>
-                            </select>
-                          )}
-                        </div>
-                      ))}
+          <div className="p-5 min-h-[200px]">
+            {!selectedSprint ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm text-[#64748b] dark:text-slate-400">No sprint selected.</p>
+                <p className="text-xs text-[#94a3b8] dark:text-slate-500 mt-1">Pick one from the list to see and update items.</p>
+              </div>
+            ) : sprintTasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm text-[#64748b] dark:text-slate-400">No items in this sprint.</p>
+              </div>
+            ) : viewMode === "board" ? (
+              <div className="grid grid-cols-3 gap-3">
+                {(["todo", "in_progress", "done"] as const).map((status) => (
+                  <div key={status} className="rounded-lg border border-[#e2e8f0] dark:border-slate-700 bg-[#f8fafc] dark:bg-slate-900/50 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748b] dark:text-slate-400 mb-2">
+                      {status === "done" ? "Done" : status === "in_progress" ? "In progress" : "To do"}
+                    </p>
+                    <div className="space-y-2">
+                      {sprintTasks
+                        .filter((t) => t.status === status)
+                        .map((t) => (
+                          <div
+                            key={t.id}
+                            className="flex items-center justify-between gap-2 p-2.5 rounded-md border border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800"
+                          >
+                            <span className="text-sm font-medium text-[#0f172a] dark:text-white truncate min-w-0">{t.title}</span>
+                            {canWrite && !selectedSprint.completed && (
+                              <select
+                                value={t.status}
+                                onChange={(e) => updateTaskStatus(t.id, e.target.value as Task["status"])}
+                                className="shrink-0 text-xs rounded border border-[#e2e8f0] dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[#0f172a] dark:text-white"
+                              >
+                                <option value="todo">To do</option>
+                                <option value="in_progress">In progress</option>
+                                <option value="done">Done</option>
+                              </select>
+                            )}
+                          </div>
+                        ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {sprintTasks.map((t) => (
-                <li
-                  key={t.id}
-                  className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700"
-                >
-                  <span className="font-medium text-sm">{t.title}</span>
-                  {canWrite && !selectedSprint.completed ? (
-                    <select
-                      value={t.status}
-                      onChange={(e) => updateTaskStatus(t.id, e.target.value as Task["status"])}
-                      className="text-sm rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1"
-                    >
-                      <option value="todo">To do</option>
-                      <option value="in_progress">In progress</option>
-                      <option value="done">Done</option>
-                    </select>
-                  ) : (
-                    <span className="text-xs font-bold px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 uppercase">
-                      {t.status}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {sprintTasks.map((t) => (
+                  <li
+                    key={t.id}
+                    className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg border border-[#e2e8f0] dark:border-slate-700 bg-[#f8fafc] dark:bg-slate-900/30"
+                  >
+                    <span className="text-sm font-medium text-[#0f172a] dark:text-white truncate min-w-0">{t.title}</span>
+                    {canWrite && !selectedSprint.completed ? (
+                      <select
+                        value={t.status}
+                        onChange={(e) => updateTaskStatus(t.id, e.target.value as Task["status"])}
+                        className="shrink-0 h-7 text-xs rounded-md border border-[#e2e8f0] dark:border-slate-600 bg-white dark:bg-slate-800 px-2 text-[#0f172a] dark:text-white"
+                      >
+                        <option value="todo">To do</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="done">Done</option>
+                      </select>
+                    ) : (
+                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#e2e8f0] dark:bg-slate-700 text-[#475569] dark:text-slate-300">
+                        {t.status.replace("_", " ")}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

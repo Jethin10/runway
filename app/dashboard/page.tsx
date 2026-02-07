@@ -139,6 +139,15 @@ export default function DashboardWorkspacesPage() {
           </Link>
         ))}
 
+        <Link
+          href="/onboarding"
+          className="p-5 rounded-2xl border border-dashed border-[#dadce0] dark:border-white/10 bg-white/50 dark:bg-[#1a2530]/50 flex flex-col gap-4 hover:border-primary/30 transition-colors"
+        >
+          <h3 className="font-bold text-[#111418] dark:text-white">From pitch deck</h3>
+          <p className="text-sm text-[#5f6368] dark:text-gray-400">Upload your deck and we’ll suggest a draft workspace. You review before anything is created.</p>
+          <span className="text-sm font-semibold text-primary">Create from pitch deck →</span>
+        </Link>
+
         <form
           onSubmit={handleCreate}
           className="p-5 rounded-2xl border border-dashed border-[#dadce0] dark:border-white/10 bg-white/50 dark:bg-[#1a2530]/50 flex flex-col gap-4"

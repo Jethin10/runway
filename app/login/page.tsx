@@ -39,9 +39,11 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithGoogle();
+      // Redirect flow: page will navigate to Google; when user returns, onAuthStateChanged will fire and we redirect to dashboard
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in with Google failed");
+      setLoading(false);
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRoleInWorkspace } from "@/contexts/AuthContext";
 import {
@@ -86,7 +86,10 @@ export default function WorkspaceOverviewPage() {
   const isFounder = role === "founder";
   const canWrite = role === "founder" || role === "team_member";
 
+  const searchParams = useSearchParams();
+  const fromOnboarding = searchParams.get("fromOnboarding") === "1";
   const currentSprint = sprints.find((s) => !s.completed && s.locked) ?? sprints.find((s) => !s.completed);
+  const draftSprint = sprints.find((s) => !s.completed && !s.locked);
   const executionInsights = getExecutionInsights(milestones, tasks, sprints);
   const validationInsights = getValidationInsights(milestones, validations, sprints);
 
@@ -213,6 +216,22 @@ export default function WorkspaceOverviewPage() {
 
   return (
     <div className="space-y-8">
+      {fromOnboarding && (
+        <div className="rounded-xl border border-[#e2e8f0] dark:border-slate-700 bg-[#f0f9ff] dark:bg-slate-800/50 p-4">
+          <p className="text-sm text-[#0f172a] dark:text-white">
+            This workspace was created from your pitch deck. Review and adjust before starting your sprint.
+          </p>
+          {draftSprint && (
+            <Link
+              href={`/dashboard/${workspaceId}/sprints`}
+              className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+            >
+              Review sprint →
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* Top header bar */}
       <div>
         <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Welcome back, Founder</h1>

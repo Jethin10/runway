@@ -2,7 +2,15 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as fbSignOut,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+} from "firebase/auth";
 import { isFirebaseConfigured, getFirebaseAuth } from "@/lib/firebase";
 import type { UserRole } from "@/lib/types";
 
@@ -33,6 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(u ?? null);
       setLoading(false);
     });
+    // Handle redirect result after Google sign-in (avoids popup + COOP issues)
+    getRedirectResult(auth)
+      .then(() => {})
+      .catch(() => {})
+      .finally(() => setLoading(false));
     return () => unsub();
   }, [isConfigured]);
 
@@ -44,7 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     const auth = getFirebaseAuth();
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
+    // Page will reload and getRedirectResult() in useEffect will complete the sign-in
   };
 
   const signUp = async (email: string, password: string, displayName?: string) => {
