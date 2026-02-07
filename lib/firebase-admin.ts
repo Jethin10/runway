@@ -39,7 +39,7 @@ function loadServiceAccountJson(): Record<string, string> | null {
   return null;
 }
 
-function getAdminApp(): App | null {
+export function getAdminApp(): App | null {
   if (adminApp) return adminApp;
   const credJson = loadServiceAccountJson();
   if (!credJson) return null;

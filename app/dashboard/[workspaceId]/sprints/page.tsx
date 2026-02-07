@@ -19,6 +19,7 @@ import {
 } from "@/lib/firestore";
 import { addLedgerEntry } from "@/lib/firestore";
 import { hashSprintCommitment, hashSprintCompletion } from "@/lib/ledger-mock";
+import { notifySlack } from "@/lib/slack-notify-client";
 import type { StartupWorkspace, Sprint, Milestone, Task } from "@/lib/types";
 
 export default function SprintsPage() {
@@ -140,6 +141,11 @@ export default function SprintsPage() {
       await addLedgerEntry(workspaceId, sprint.id, "commitment", hash, `Sprint ${sprint.weekStartDate} goals committed`);
       setSprints((s) => s.map((x) => (x.id === sprint.id ? { ...x, locked: true } : x)));
       setSelectedSprint((prev) => (prev?.id === sprint.id ? { ...prev!, locked: true } : prev));
+      const sprintLabel = `Week ${sprint.weekStartDate}`;
+      notifySlack(user, workspaceId, "sprint_locked", {
+        sprintLabel,
+        sprintGoals: sprint.goals.map((g) => g.text),
+      });
     } finally {
       setLocking(false);
     }
@@ -177,6 +183,14 @@ export default function SprintsPage() {
         s.map((x) => (x.id === sprint.id ? { ...x, completed: true, completionStats } : x))
       );
       setSelectedSprint(null);
+      const sprintLabel = `Week ${sprint.weekStartDate}`;
+      notifySlack(user, workspaceId, "sprint_closed", {
+        sprintLabel,
+        tasksCompleted: completed,
+        tasksTotal: total,
+        milestonesDelivered: 0,
+        validationsLogged: 0,
+      });
     } finally {
       setClosing(false);
     }

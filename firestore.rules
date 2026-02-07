@@ -90,3 +90,9 @@ match /workspaceInvites/{inviteId} {
   allow update: if isAuthenticated();
   allow delete: if isAuthenticated() && isFounder(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
 }
+
+# Workspace integrations (e.g. Slack). botToken stored here; never expose to client.
+# All access via API only (server uses Firebase Admin). Client must not read/write this collection.
+match /workspaceIntegrations/{integrationId} {
+  allow read, write: if false;
+}

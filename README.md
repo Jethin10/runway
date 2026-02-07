@@ -40,7 +40,14 @@ Unified operational workspace for early-stage startup founders. Built for IIT Ja
    NEXT_PUBLIC_FIREBASE_APP_ID=...
    ```
 
-   For **public validation links** (shareable feedback form per milestone), set **`FIREBASE_SERVICE_ACCOUNT_KEY`** in `.env` to your Firebase service account JSON (Project settings → Service accounts → Generate new key). Paste the whole JSON on **one line** and wrap in single quotes so quotes inside don’t break parsing, e.g. `FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"your-project",...}'`. Alternatively use `FIREBASE_SERVICE_ACCOUNT_PATH=firebase-service-account.json` and save the JSON in that file (gitignored). Never commit the key.
+   For **public validation links** (shareable feedback form per milestone), set **`FIREBASE_SERVICE_ACCOUNT_KEY`** in `.env` to your Firebase service account JSON (Project settings → Service accounts → Generate new key). Paste the whole JSON on **one line** and wrap in single quotes so quotes inside don’t break parsing, e.g. `FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"your-project",...}'`. Alternatively use `FIREBASE_SERVICE_ACCOUNT_PATH=firebase-service-account.json` and save the JSON in that file (gitignored).    Never commit the key.
+
+   **Slack (optional)** — To enable “Connect Slack” on the Integrations page (broadcast sprint/milestone events to a channel):
+
+   - Create a Slack app at [api.slack.com/apps](https://api.slack.com/apps) (Bot token, scopes: `chat:write`, `channels:read`, `groups:read`).
+   - Add to `.env`: `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`.
+   - Set **Redirect URL** in Slack app to `https://your-domain.com/api/slack/callback` (or `http://localhost:3000/api/slack/callback` for dev).
+   - In production set `NEXT_PUBLIC_APP_URL=https://your-domain.com` so the OAuth redirect URL is correct.
 
 3. **Firestore rules**
 

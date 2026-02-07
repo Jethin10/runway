@@ -129,6 +129,34 @@ export interface ValidationEntry {
   confidenceScore?: number | null;
 }
 
+/** Slack integration config (botToken never exposed to client). */
+export interface SlackIntegrationConfig {
+  slackTeamId: string;
+  channelId: string;
+  channelName: string;
+  botToken: string;
+}
+
+/** Workspace integration: Slack is the only supported type. Stored in Firestore; botToken server-only. */
+export interface WorkspaceIntegration {
+  id: string;
+  workspaceId: string;
+  type: "slack";
+  connectedAt: number;
+  createdBy: string;
+  config: SlackIntegrationConfig;
+}
+
+/** Safe view of integration for UI (no botToken). */
+export interface WorkspaceIntegrationSafe {
+  id: string;
+  workspaceId: string;
+  type: "slack";
+  connectedAt: number;
+  createdBy: string;
+  config: Omit<SlackIntegrationConfig, "botToken">;
+}
+
 /** Ledger entry for Execution & Validation Ledger (blockchain mock) */
 export interface LedgerEntry {
   id: string;

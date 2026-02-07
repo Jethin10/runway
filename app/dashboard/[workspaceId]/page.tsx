@@ -16,6 +16,7 @@ import {
   updateMilestone,
 } from "@/lib/firestore";
 import { getExecutionInsights, getValidationInsights } from "@/lib/ai-mock";
+import { notifySlack } from "@/lib/slack-notify-client";
 import type {
   StartupWorkspace,
   Milestone,
@@ -52,9 +53,17 @@ export default function WorkspaceOverviewPage() {
     setUpdatingMilestoneId(milestoneId);
     try {
       await updateMilestone(milestoneId, { status });
-      setMilestones((prev) =>
-        prev.map((m) => (m.id === milestoneId ? { ...m, status } : m))
+      const prev = milestones.find((m) => m.id === milestoneId);
+      setMilestones((p) =>
+        p.map((m) => (m.id === milestoneId ? { ...m, status } : m))
       );
+      if (status === "completed" && prev) {
+        const sprintLabel = currentSprint ? `Week ${currentSprint.weekStartDate}` : undefined;
+        notifySlack(user ?? null, workspaceId, "milestone_completed", {
+          milestoneTitle: prev.title,
+          sprintLabelForMilestone: sprintLabel,
+        });
+      }
     } finally {
       setUpdatingMilestoneId(null);
     }
