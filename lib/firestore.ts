@@ -32,6 +32,13 @@ import type {
   WorkspaceMember,
   UserRole,
   WorkspaceInvite,
+  FundingRound,
+  FundingAllocation,
+  SpendLog,
+  ExecutionAuditLogEntry,
+  ExecutionAuditLogType,
+  FundingSource,
+  FundingCategory,
 } from "./types";
 
 const toMillis = (t: Timestamp | undefined) => (t ? t.toMillis() : 0);
@@ -251,6 +258,9 @@ export async function getMilestones(workspaceId: string): Promise<Milestone[]> {
       taskIds: d.taskIds ?? [],
       order: d.order ?? 0,
       createdAt: toMillis(d.createdAt),
+      fundingCategory: d.fundingCategory ?? null,
+      estimatedSpendRangeMin: d.estimatedSpendRangeMin ?? null,
+      estimatedSpendRangeMax: d.estimatedSpendRangeMax ?? null,
     };
   });
   milestones.sort((a, b) => a.order - b.order);
@@ -259,10 +269,24 @@ export async function getMilestones(workspaceId: string): Promise<Milestone[]> {
 
 export async function updateMilestone(
   milestoneId: string,
-  updates: Partial<Pick<Milestone, "title" | "description" | "status" | "progressPercentage">>
+  updates: Partial<
+    Pick<
+      Milestone,
+      | "title"
+      | "description"
+      | "status"
+      | "progressPercentage"
+      | "fundingCategory"
+      | "estimatedSpendRangeMin"
+      | "estimatedSpendRangeMax"
+    >
+  >
 ) {
   const db = getFirebaseDb();
-  await updateDoc(doc(db, COLLECTIONS.MILESTONES, milestoneId), updates as DocumentData);
+  const safe = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  ) as DocumentData;
+  if (Object.keys(safe).length) await updateDoc(doc(db, COLLECTIONS.MILESTONES, milestoneId), safe);
 }
 
 // ---- Tasks ----
@@ -401,6 +425,8 @@ export async function getSprints(workspaceId: string): Promise<Sprint[]> {
       completionStats: d.completionStats ?? null,
       createdAt: toMillis(d.createdAt),
       createdBy: d.createdBy,
+      fundingCategory: d.fundingCategory ?? null,
+      estimatedSpendRange: d.estimatedSpendRange ?? null,
     };
   });
   sprints.sort((a, b) => b.createdAt - a.createdAt);
@@ -449,6 +475,8 @@ export async function getSprint(sprintId: string): Promise<Sprint | null> {
     completionStats: d.completionStats ?? null,
     createdAt: toMillis(d.createdAt),
     createdBy: d.createdBy,
+    fundingCategory: d.fundingCategory ?? null,
+    estimatedSpendRange: d.estimatedSpendRange ?? null,
   };
 }
 
@@ -548,4 +576,296 @@ export async function getLedgerForWorkspace(
   });
   entries.sort((a, b) => b.timestamp - a.timestamp);
   return entries.slice(0, 50);
+}
+
+// ---- Funding ----
+export async function createFundingRound(
+  workspaceId: string,
+  data: {
+    name: string;
+    amount: number;
+    currency: string;
+    source: FundingSource;
+    date: number;
+    notes?: string | null;
+  },
+  createdBy: string
+): Promise<string> {
+  const db = getFirebaseDb();
+  const ref = doc(collection(db, COLLECTIONS.FUNDING_ROUNDS));
+  const now = Date.now();
+  await setDoc(ref, {
+    workspaceId,
+    name: data.name,
+    amount: data.amount,
+    currency: data.currency,
+    source: data.source,
+    date: data.date,
+    notes: data.notes ?? null,
+    createdBy,
+    createdAt: now,
+  });
+  return ref.id;
+}
+
+export async function getFundingRounds(workspaceId: string): Promise<FundingRound[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(collection(db, COLLECTIONS.FUNDING_ROUNDS), where("workspaceId", "==", workspaceId))
+  );
+  const out = snap.docs.map((s) => {
+    const d = s.data();
+    return {
+      id: s.id,
+      workspaceId: d.workspaceId,
+      name: d.name,
+      amount: d.amount ?? 0,
+      currency: d.currency ?? "INR",
+      source: d.source,
+      date: d.date ?? 0,
+      notes: d.notes ?? null,
+      createdBy: d.createdBy,
+      createdAt: d.createdAt ?? 0,
+    };
+  });
+  out.sort((a, b) => b.date - a.date);
+  return out;
+}
+
+export async function updateFundingRoundNotes(
+  roundId: string,
+  notes: string | null
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, COLLECTIONS.FUNDING_ROUNDS, roundId), { notes } as DocumentData);
+}
+
+export async function getFundingRound(roundId: string): Promise<FundingRound | null> {
+  const db = getFirebaseDb();
+  const snap = await getDoc(doc(db, COLLECTIONS.FUNDING_ROUNDS, roundId));
+  if (!snap.exists()) return null;
+  const d = snap.data();
+  return {
+    id: snap.id,
+    workspaceId: d.workspaceId,
+    name: d.name,
+    amount: d.amount ?? 0,
+    currency: d.currency ?? "INR",
+    source: d.source,
+    date: d.date ?? 0,
+    notes: d.notes ?? null,
+    createdBy: d.createdBy,
+    createdAt: d.createdAt ?? 0,
+  };
+}
+
+export async function createFundingAllocation(
+  workspaceId: string,
+  fundingRoundId: string,
+  category: FundingCategory,
+  allocatedAmount: number,
+  createdBy: string
+): Promise<string> {
+  const db = getFirebaseDb();
+  const ref = doc(collection(db, COLLECTIONS.FUNDING_ALLOCATIONS));
+  const now = Date.now();
+  await setDoc(ref, {
+    workspaceId,
+    fundingRoundId,
+    category,
+    allocatedAmount,
+    createdAt: now,
+  });
+  return ref.id;
+}
+
+export async function getFundingAllocations(workspaceId: string): Promise<FundingAllocation[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(collection(db, COLLECTIONS.FUNDING_ALLOCATIONS), where("workspaceId", "==", workspaceId))
+  );
+  const out = snap.docs.map((s) => {
+    const d = s.data();
+    return {
+      id: s.id,
+      workspaceId: d.workspaceId,
+      fundingRoundId: d.fundingRoundId,
+      category: d.category,
+      allocatedAmount: d.allocatedAmount ?? 0,
+      createdAt: d.createdAt ?? 0,
+    };
+  });
+  return out;
+}
+
+export async function getFundingAllocationsForRound(
+  fundingRoundId: string
+): Promise<FundingAllocation[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(
+      collection(db, COLLECTIONS.FUNDING_ALLOCATIONS),
+      where("fundingRoundId", "==", fundingRoundId)
+    )
+  );
+  return snap.docs.map((s) => {
+    const d = s.data();
+    return {
+      id: s.id,
+      workspaceId: d.workspaceId,
+      fundingRoundId: d.fundingRoundId,
+      category: d.category,
+      allocatedAmount: d.allocatedAmount ?? 0,
+      createdAt: d.createdAt ?? 0,
+    };
+  });
+}
+
+export async function updateFundingAllocation(
+  allocationId: string,
+  updates: Partial<Pick<FundingAllocation, "category" | "allocatedAmount">>
+): Promise<void> {
+  const db = getFirebaseDb();
+  const safe = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  ) as DocumentData;
+  if (Object.keys(safe).length)
+    await updateDoc(doc(db, COLLECTIONS.FUNDING_ALLOCATIONS, allocationId), safe);
+}
+
+export async function deleteFundingAllocation(allocationId: string): Promise<void> {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, COLLECTIONS.FUNDING_ALLOCATIONS, allocationId));
+}
+
+export async function createSpendLog(
+  workspaceId: string,
+  data: {
+    fundingRoundId?: string | null;
+    category: FundingCategory;
+    amount: number;
+    date: number;
+    linkedSprintId?: string | null;
+    linkedMilestoneId?: string | null;
+    note: string;
+  },
+  createdBy: string
+): Promise<string> {
+  const db = getFirebaseDb();
+  const ref = doc(collection(db, COLLECTIONS.SPEND_LOGS));
+  const now = Date.now();
+  await setDoc(ref, {
+    workspaceId,
+    fundingRoundId: data.fundingRoundId ?? null,
+    category: data.category,
+    amount: data.amount,
+    date: data.date,
+    linkedSprintId: data.linkedSprintId ?? null,
+    linkedMilestoneId: data.linkedMilestoneId ?? null,
+    note: data.note,
+    createdBy,
+    createdAt: now,
+  });
+  return ref.id;
+}
+
+export async function getSpendLogs(workspaceId: string): Promise<SpendLog[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(collection(db, COLLECTIONS.SPEND_LOGS), where("workspaceId", "==", workspaceId))
+  );
+  const out = snap.docs.map((s) => {
+    const d = s.data();
+    return {
+      id: s.id,
+      workspaceId: d.workspaceId,
+      fundingRoundId: d.fundingRoundId ?? null,
+      category: d.category,
+      amount: d.amount ?? 0,
+      date: d.date ?? 0,
+      linkedSprintId: d.linkedSprintId ?? null,
+      linkedMilestoneId: d.linkedMilestoneId ?? null,
+      note: d.note ?? "",
+      createdBy: d.createdBy,
+      createdAt: d.createdAt ?? 0,
+    };
+  });
+  out.sort((a, b) => b.date - a.date);
+  return out;
+}
+
+export async function updateSpendLog(
+  logId: string,
+  updates: Partial<
+    Pick<
+      SpendLog,
+      | "category"
+      | "amount"
+      | "date"
+      | "linkedSprintId"
+      | "linkedMilestoneId"
+      | "note"
+      | "fundingRoundId"
+    >
+  >
+): Promise<void> {
+  const db = getFirebaseDb();
+  const safe = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  ) as DocumentData;
+  if (Object.keys(safe).length) await updateDoc(doc(db, COLLECTIONS.SPEND_LOGS, logId), safe);
+}
+
+export async function deleteSpendLog(logId: string): Promise<void> {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, COLLECTIONS.SPEND_LOGS, logId));
+}
+
+// ---- Execution Audit Log (append-only) ----
+export async function appendExecutionAuditLog(
+  workspaceId: string,
+  type: ExecutionAuditLogType,
+  entityId: string,
+  summary: string,
+  createdBy: string
+): Promise<string> {
+  const db = getFirebaseDb();
+  const ref = doc(collection(db, COLLECTIONS.EXECUTION_AUDIT_LOG));
+  const now = Date.now();
+  await setDoc(ref, {
+    workspaceId,
+    type,
+    entityId,
+    summary,
+    createdBy,
+    createdAt: now,
+  });
+  return ref.id;
+}
+
+export async function getExecutionAuditLog(
+  workspaceId: string,
+  limitCount = 50
+): Promise<ExecutionAuditLogEntry[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(
+      collection(db, COLLECTIONS.EXECUTION_AUDIT_LOG),
+      where("workspaceId", "==", workspaceId),
+      orderBy("createdAt", "desc"),
+      limit(limitCount)
+    )
+  );
+  return snap.docs.map((s) => {
+    const d = s.data();
+    return {
+      id: s.id,
+      workspaceId: d.workspaceId,
+      type: d.type,
+      entityId: d.entityId,
+      summary: d.summary,
+      createdBy: d.createdBy,
+      createdAt: d.createdAt ?? 0,
+    };
+  });
 }

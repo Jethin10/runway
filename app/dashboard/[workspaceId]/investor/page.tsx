@@ -10,10 +10,13 @@ import {
   getMilestones,
   getTasksForWorkspace,
   getValidationsForWorkspace,
+  getFundingRounds,
+  getFundingAllocations,
+  getSpendLogs,
 } from "@/lib/firestore";
 import { generateInvestorSummary } from "@/lib/ai-mock";
 import type { InvestorSummary } from "@/lib/ai-mock";
-import type { StartupWorkspace, Milestone, Task, Sprint, ValidationEntry } from "@/lib/types";
+import type { StartupWorkspace, Milestone, Task, Sprint, ValidationEntry, FundingRound, FundingAllocation, SpendLog } from "@/lib/types";
 
 export default function InvestorPage() {
   const params = useParams();
@@ -26,6 +29,9 @@ export default function InvestorPage() {
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [summary, setSummary] = useState<InvestorSummary | null>(null);
   const [generatedBy, setGeneratedBy] = useState<"openai" | "rule-based">("rule-based");
+  const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([]);
+  const [allocations, setAllocations] = useState<FundingAllocation[]>([]);
+  const [spendLogs, setSpendLogs] = useState<SpendLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState<"outline" | "metrics" | null>(null);
 
@@ -41,7 +47,13 @@ export default function InvestorPage() {
       getTasksForWorkspace(workspaceId),
       getValidationsForWorkspace(workspaceId),
       getSprints(workspaceId),
-    ]).then(async ([milestonesData, tasksData, validationsData, sprintsData]) => {
+      getFundingRounds(workspaceId),
+      getFundingAllocations(workspaceId),
+      getSpendLogs(workspaceId),
+    ]).then(async ([milestonesData, tasksData, validationsData, sprintsData, roundsData, allocationsData, spendLogsData]) => {
+      setFundingRounds(roundsData);
+      setAllocations(allocationsData);
+      setSpendLogs(spendLogsData);
       setMilestones(milestonesData);
       setTasks(tasksData);
       setValidations(validationsData);
@@ -133,6 +145,28 @@ export default function InvestorPage() {
     .filter((m) => m.status !== "completed")
     .slice(0, 5)
     .map((m) => m.title);
+
+  const totalRaised = fundingRounds.reduce((s, r) => s + r.amount, 0);
+  const totalSpend = spendLogs.reduce((s, x) => s + x.amount, 0);
+  const allocationByCategory = allocations.reduce<Record<string, number>>((acc, a) => {
+    acc[a.category] = (acc[a.category] ?? 0) + a.allocatedAmount;
+    return acc;
+  }, {});
+  const fundedCategoriesWithMilestones = milestones
+    .filter((m) => m.status === "completed" && m.fundingCategory)
+    .map((m) => ({ title: m.title, category: m.fundingCategory! }));
+  const avgMonthlySpend =
+    spendLogs.length > 0
+      ? totalSpend /
+        Math.max(
+          1,
+          (Date.now() - Math.min(...spendLogs.map((x) => x.date))) / (30 * 24 * 60 * 60 * 1000)
+        )
+      : 0;
+  const runwayMonths =
+    avgMonthlySpend > 0 && totalRaised > totalSpend
+      ? (totalRaised - totalSpend) / avgMonthlySpend
+      : null;
 
   const checklist = {
     pitchOutline: !!summary,
@@ -236,6 +270,57 @@ export default function InvestorPage() {
           <p className="text-lg font-bold text-[#111418] dark:text-white mt-0.5">{completedSprints} closed · {validations.length} entries</p>
         </div>
       </div>
+
+      {/* Capital Usage Summary */}
+      {(totalRaised > 0 || totalSpend > 0) && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">Capital usage summary</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total raised</p>
+              <p className="text-lg font-bold text-[#111418] dark:text-white mt-0.5">
+                {fundingRounds[0]?.currency ?? "INR"} {totalRaised.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total logged spend</p>
+              <p className="text-lg font-bold text-[#111418] dark:text-white mt-0.5">
+                {fundingRounds[0]?.currency ?? "INR"} {totalSpend.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Runway (estimate)</p>
+              <p className="text-lg font-bold text-[#111418] dark:text-white mt-0.5">
+                {runwayMonths != null ? `≈ ${runwayMonths.toFixed(1)} months` : "—"}
+              </p>
+            </div>
+          </div>
+          {Object.keys(allocationByCategory).length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Allocation breakdown</p>
+              <ul className="text-sm text-[#111418] dark:text-white space-y-1">
+                {Object.entries(allocationByCategory).map(([cat, amt]) => (
+                  <li key={cat}>
+                    {cat}: {fundingRounds[0]?.currency ?? "INR"} {amt.toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {fundedCategoriesWithMilestones.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Milestones delivered (funded categories)</p>
+              <ul className="text-sm text-[#111418] dark:text-white space-y-1">
+                {fundedCategoriesWithMilestones.slice(0, 8).map((m, i) => (
+                  <li key={i}>
+                    {m.title} ({m.category})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Readiness checklist */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">

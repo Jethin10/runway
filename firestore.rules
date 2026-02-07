@@ -96,3 +96,29 @@ match /workspaceInvites/{inviteId} {
 match /workspaceIntegrations/{integrationId} {
   allow read, write: if false;
 }
+
+# Funding: founder create/edit rounds; allocation total enforced in app.
+match /fundingRounds/{roundId} {
+  allow read: if isAuthenticated() && isMember(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+  allow create: if isAuthenticated() && isFounder(get(/databases/$(database)/documents/workspaces/$(request.resource.data.workspaceId)));
+  allow update, delete: if isAuthenticated() && isFounder(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+}
+
+match /fundingAllocations/{allocationId} {
+  allow read: if isAuthenticated() && isMember(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+  allow create: if isAuthenticated() && isTeamMemberOrFounder(get(/databases/$(database)/documents/workspaces/$(request.resource.data.workspaceId)));
+  allow update, delete: if isAuthenticated() && isTeamMemberOrFounder(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+}
+
+match /spendLogs/{logId} {
+  allow read: if isAuthenticated() && isMember(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+  allow create: if isAuthenticated() && isTeamMemberOrFounder(get(/databases/$(database)/documents/workspaces/$(request.resource.data.workspaceId)));
+  allow update, delete: if isAuthenticated() && isTeamMemberOrFounder(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+}
+
+# Execution audit log: append-only; no edit/delete.
+match /executionAuditLog/{entryId} {
+  allow read: if isAuthenticated() && isMember(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+  allow create: if isAuthenticated() && isTeamMemberOrFounder(get(/databases/$(database)/documents/workspaces/$(request.resource.data.workspaceId)));
+  allow update, delete: if false;
+}

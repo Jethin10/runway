@@ -17,7 +17,7 @@ import {
   deleteSprint,
   updateTask,
 } from "@/lib/firestore";
-import { addLedgerEntry } from "@/lib/firestore";
+import { addLedgerEntry, appendExecutionAuditLog } from "@/lib/firestore";
 import { hashSprintCommitment, hashSprintCompletion } from "@/lib/ledger-mock";
 import { notifySlack } from "@/lib/slack-notify-client";
 import type { StartupWorkspace, Sprint, Milestone, Task } from "@/lib/types";
@@ -191,6 +191,15 @@ export default function SprintsPage() {
         milestonesDelivered: 0,
         validationsLogged: 0,
       });
+      if (sprint.fundingCategory) {
+        await appendExecutionAuditLog(
+          workspaceId,
+          "FUNDED_SPRINT_COMPLETED",
+          sprint.id,
+          `Sprint closed: ${sprintLabel} (${sprint.fundingCategory})`,
+          user.uid
+        );
+      }
     } finally {
       setClosing(false);
     }

@@ -14,6 +14,7 @@ const WORKSPACE_NAV = [
   { label: "Overview", icon: "home", pathPart: "" },
   { label: "Sprints", icon: "update", pathPart: "/sprints" },
   { label: "Analytics", icon: "analytics", pathPart: "/analytics" },
+  { label: "Funding", icon: "payments", pathPart: "/funding" },
   { label: "Team", icon: "groups", pathPart: "/team" },
   { label: "Integrations", icon: "hub", pathPart: "/integrations" },
   { label: "Investor readiness", icon: "summarize", pathPart: "/investor" },

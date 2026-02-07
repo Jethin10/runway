@@ -11,4 +11,8 @@ export const COLLECTIONS = {
   WORKSPACE_INTEGRATIONS: "workspaceIntegrations",
   /** Server-only: Slack OAuth temp state (token + channels). Not in client rules. */
   SLACK_OAUTH_TEMP: "slackOAuthTemp",
+  FUNDING_ROUNDS: "fundingRounds",
+  FUNDING_ALLOCATIONS: "fundingAllocations",
+  SPEND_LOGS: "spendLogs",
+  EXECUTION_AUDIT_LOG: "executionAuditLog",
 } as const;

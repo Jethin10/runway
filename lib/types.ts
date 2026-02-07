@@ -40,6 +40,9 @@ export interface WorkspaceInvite {
 
 export type MilestoneStatus = "planned" | "active" | "completed";
 
+/** Funding category for allocation and spend. Used optionally on milestones/sprints. */
+export type FundingCategory = "Engineering" | "Marketing" | "Hiring" | "Infra" | "Ops" | "Custom";
+
 export interface Milestone {
   id: string;
   workspaceId: string;
@@ -50,6 +53,10 @@ export interface Milestone {
   taskIds: string[];
   order: number;
   createdAt: number;
+  /** Optional: map capital → execution. */
+  fundingCategory?: FundingCategory | null;
+  estimatedSpendRangeMin?: number | null;
+  estimatedSpendRangeMax?: number | null;
 }
 
 export type TaskStatus = "todo" | "in_progress" | "done";
@@ -92,6 +99,9 @@ export interface Sprint {
   completionStats: SprintCompletionStats | null;
   createdAt: number;
   createdBy: string;
+  /** Optional: map capital → execution. */
+  fundingCategory?: FundingCategory | null;
+  estimatedSpendRange?: number | null;
 }
 
 export type ValidationType = "interview" | "survey" | "experiment";
@@ -155,6 +165,62 @@ export interface WorkspaceIntegrationSafe {
   connectedAt: number;
   createdBy: string;
   config: Omit<SlackIntegrationConfig, "botToken">;
+}
+
+// ---- Funding → Allocation → Execution → Review ----
+
+export type FundingSource = "Angel" | "VC" | "Grant" | "Accelerator" | "Bootstrapped";
+
+export interface FundingRound {
+  id: string;
+  workspaceId: string;
+  name: string;
+  amount: number;
+  currency: string;
+  source: FundingSource;
+  date: number; // ms
+  notes?: string | null;
+  createdBy: string;
+  createdAt: number;
+}
+
+export interface FundingAllocation {
+  id: string;
+  workspaceId: string;
+  fundingRoundId: string;
+  category: FundingCategory;
+  allocatedAmount: number;
+  createdAt: number;
+}
+
+export interface SpendLog {
+  id: string;
+  workspaceId: string;
+  fundingRoundId?: string | null;
+  category: FundingCategory;
+  amount: number;
+  date: number; // ms
+  linkedSprintId?: string | null;
+  linkedMilestoneId?: string | null;
+  note: string;
+  createdBy: string;
+  createdAt: number;
+}
+
+export type ExecutionAuditLogType =
+  | "FUNDING_CREATED"
+  | "ALLOCATION_UPDATED"
+  | "SPEND_LOGGED"
+  | "FUNDED_SPRINT_COMPLETED";
+
+export interface ExecutionAuditLogEntry {
+  id: string;
+  workspaceId: string;
+  type: ExecutionAuditLogType;
+  entityId: string;
+  summary: string;
+  createdBy: string;
+  createdAt: number;
 }
 
 /** Ledger entry for Execution & Validation Ledger (blockchain mock) */

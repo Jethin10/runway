@@ -63,6 +63,7 @@ Unified operational workspace for early-stage startup founders. Built for IIT Ja
    - `sprints`: `workspaceId` (Asc), `createdAt` (Desc)
    - `validations`: `workspaceId` (Asc), `createdAt` (Desc)
    - `workspaceInvites`: `workspaceId` (Asc), `token` (Asc), `used` (Asc)
+   - `executionAuditLog`: `workspaceId` (Asc), `createdAt` (Desc)
 
 5. **Run**
 
