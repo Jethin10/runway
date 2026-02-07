@@ -12,6 +12,7 @@ const PDF_SCRIPT_ID = "pdfjs-script";
 declare global {
   interface Window {
     pdfjsLib?: {
+      GlobalWorkerOptions?: { workerSrc: string };
       getDocument: (params: { data: ArrayBuffer }) => { promise: Promise<{ numPages: number; getPage: (i: number) => Promise<{ getTextContent: () => Promise<{ items: { str?: string }[] }> }> }> };
     };
   }
@@ -32,6 +33,9 @@ function loadPdfScript(): Promise<void> {
     script.src = `${PDFJS_CDN}/pdf.min.js`;
     script.onload = () => {
       if (window.pdfjsLib) {
+        if (window.pdfjsLib.GlobalWorkerOptions) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_CDN}/pdf.worker.min.js`;
+        }
         resolve();
       } else {
         reject(new Error("PDF.js global not found"));

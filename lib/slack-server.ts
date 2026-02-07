@@ -11,8 +11,13 @@ export const SLACK_SCOPES = "chat:write,channels:read,groups:read";
 
 export function getSlackOAuthRedirectUrl(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
-  const protocol = base?.startsWith("http") ? "" : "https://";
-  const host = base?.replace(/^https?:\/\//, "") || "localhost:3000";
+  if (!base) return "http://localhost:3000/api/slack/callback";
+  const trimmed = base.replace(/\/$/, "").split("?")[0];
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return `${trimmed}/api/slack/callback`;
+  }
+  const host = trimmed.split("/")[0] || "localhost:3000";
+  const protocol = host === "localhost:3000" ? "http://" : "https://";
   return `${protocol}${host}/api/slack/callback`;
 }
 
