@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getAuthUserIdFromRequest } from "@/lib/auth-api";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { COLLECTIONS } from "@/lib/constants";
+import { joinChannel } from "@/lib/slack-server";
 import type { WorkspaceIntegration } from "@/lib/types";
 
 const TEMP_TTL_MS = 15 * 60 * 1000;
@@ -62,6 +63,8 @@ export async function POST(request: Request) {
 
   const botToken = data.botToken as string;
   const slackTeamId = data.slackTeamId as string;
+
+  await joinChannel(botToken, channelId);
 
   const intRef = db.collection(COLLECTIONS.WORKSPACE_INTEGRATIONS).doc();
   const integration: Omit<WorkspaceIntegration, "id"> = {

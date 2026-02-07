@@ -7,7 +7,7 @@ const SLACK_OAUTH_URL = "https://slack.com/oauth/v2/authorize";
 const SLACK_TOKEN_URL = "https://slack.com/api/oauth.v2.access";
 const SLACK_API_BASE = "https://slack.com/api";
 
-export const SLACK_SCOPES = "chat:write,channels:read,groups:read";
+export const SLACK_SCOPES = "chat:write,channels:read,channels:join,groups:read";
 
 export function getSlackOAuthRedirectUrl(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
@@ -70,6 +70,20 @@ export async function listChannels(botToken: string): Promise<SlackChannel[]> {
   const data = (await res.json()) as { ok: boolean; channels?: { id: string; name: string; is_private?: boolean }[] };
   if (!data.ok || !data.channels) return [];
   return data.channels.map((c) => ({ id: c.id, name: c.name, is_private: c.is_private }));
+}
+
+/** Join a channel so the bot can post. Call when saving the integration so the bot is in the channel. */
+export async function joinChannel(botToken: string, channelId: string): Promise<boolean> {
+  const res = await fetch(`${SLACK_API_BASE}/conversations.join`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${botToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ channel: channelId }),
+  });
+  const data = (await res.json()) as { ok: boolean };
+  return !!data.ok;
 }
 
 export async function sendSlackMessage(botToken: string, channelId: string, text: string): Promise<boolean> {
