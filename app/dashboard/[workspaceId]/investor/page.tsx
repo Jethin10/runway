@@ -112,6 +112,7 @@ export default function InvestorPage() {
 
   const role = workspace ? getRoleInWorkspace(user?.uid ?? undefined, workspace.members) : null;
   const isFounder = role === "founder";
+  const canViewInvestor = role === "founder" || role === "investor";
 
   // Derived metrics
   const completedMilestones = milestones.filter((m) => m.status === "completed").length;
@@ -187,11 +188,11 @@ export default function InvestorPage() {
     );
   }
 
-  if (!isFounder) {
+  if (!canViewInvestor) {
     return (
       <div className="py-12">
         <p className="text-amber-600 dark:text-amber-400">
-          Only founders can view investor readiness.
+          Only founders and investors can view this page.
         </p>
       </div>
     );

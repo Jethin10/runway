@@ -24,6 +24,20 @@ export interface StartupWorkspace {
   createdAt: number; // Firestore timestamp as ms
 }
 
+/** Invite-by-link: one-time token for joining a workspace. No email sending. */
+export interface WorkspaceInvite {
+  id: string;
+  workspaceId: string;
+  role: UserRole;
+  token: string;
+  createdBy: string;
+  createdAt: number;
+  expiresAt: number | null;
+  used: boolean;
+  usedBy?: string | null;
+  usedAt?: number | null;
+}
+
 export type MilestoneStatus = "planned" | "active" | "completed";
 
 export interface Milestone {

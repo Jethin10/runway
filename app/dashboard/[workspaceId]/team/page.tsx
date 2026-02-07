@@ -4,8 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRoleInWorkspace } from "@/contexts/AuthContext";
-import { getWorkspace, updateWorkspace } from "@/lib/firestore";
+import { getWorkspace, updateWorkspace, createWorkspaceInvite } from "@/lib/firestore";
 import type { StartupWorkspace, WorkspaceMember, UserRole } from "@/lib/types";
+
+/** Real members only: exclude cosmetic invite-* placeholders. Invite-by-link adds real Firebase uids. */
+function isRealMember(m: WorkspaceMember): boolean {
+  return !m.userId.startsWith("invite-");
+}
 
 export default function TeamPage() {
   const params = useParams();
@@ -16,9 +21,10 @@ export default function TeamPage() {
   const [editName, setEditName] = useState("");
   const [editStage, setEditStage] = useState<StartupWorkspace["stage"]>("MVP");
   const [savingProfile, setSavingProfile] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<UserRole>("team_member");
-  const [inviting, setInviting] = useState(false);
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -34,6 +40,8 @@ export default function TeamPage() {
   const role = workspace ? getRoleInWorkspace(user?.uid ?? undefined, workspace.members) : null;
   const isFounder = role === "founder";
 
+  const realMembers = workspace ? workspace.members.filter(isRealMember) : [];
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!workspaceId || !isFounder || !editName.trim()) return;
@@ -46,29 +54,30 @@ export default function TeamPage() {
     }
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!workspaceId || !workspace || !inviteEmail.trim() || !isFounder) return;
-    setInviting(true);
+  const handleGenerateLink = async () => {
+    if (!workspaceId || !isFounder) return;
+    setGeneratingLink(true);
+    setGeneratedLink(null);
     try {
-      const newMember: WorkspaceMember = {
-        userId: `invite-${Date.now()}-${inviteEmail}`,
-        role: inviteRole,
-        email: inviteEmail.trim(),
-      };
-      const updated = [...workspace.members, newMember];
-      await updateWorkspace(workspaceId, { members: updated });
-      setWorkspace((w) => (w ? { ...w, members: updated } : null));
-      setInviteEmail("");
-      setInviteRole("team_member");
+      const { token } = await createWorkspaceInvite(workspaceId, inviteRole, user!.uid);
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      setGeneratedLink(`${origin}/join/${workspaceId}?token=${token}`);
     } finally {
-      setInviting(false);
+      setGeneratingLink(false);
     }
+  };
+
+  const copyLink = () => {
+    if (!generatedLink) return;
+    void navigator.clipboard.writeText(generatedLink).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
   };
 
   const removeMember = async (m: WorkspaceMember) => {
     if (!workspaceId || !workspace || !isFounder) return;
-    if (m.userId === workspace.createdBy) return; // cannot remove founder
+    if (m.userId === workspace.createdBy) return;
     const updated = workspace.members.filter((x) => x.userId !== m.userId);
     await updateWorkspace(workspaceId, { members: updated });
     setWorkspace((w) => (w ? { ...w, members: updated } : null));
@@ -91,7 +100,6 @@ export default function TeamPage() {
         </p>
       </div>
 
-      {/* Editable startup profile - PDF: "Startup details", "Editable and scalable structure" */}
       {isFounder && (
         <section className="bg-white dark:bg-[#1a2530] rounded-2xl border border-[#e8eaed] dark:border-white/5 p-6">
           <h2 className="font-bold text-lg mb-4">Startup profile</h2>
@@ -129,13 +137,11 @@ export default function TeamPage() {
         </section>
       )}
 
-      {/* Team members - PDF: "Manage team roles and responsibilities" */}
       <section className="bg-white dark:bg-[#1a2530] rounded-2xl border border-[#e8eaed] dark:border-white/5 p-6">
         <h2 className="font-bold text-lg mb-4">Team members</h2>
         <ul className="space-y-3 mb-6">
-          {workspace.members.map((m) => {
+          {realMembers.map((m) => {
             const isYou = m.userId === user?.uid;
-            const isPending = m.userId.startsWith("invite-");
             return (
               <li
                 key={m.userId}
@@ -149,7 +155,6 @@ export default function TeamPage() {
                     <p className="font-medium text-[#111418] dark:text-white">
                       {m.displayName || m.email || "Team member"}
                       {isYou && <span className="ml-2 text-xs text-primary font-bold">(you)</span>}
-                      {isPending && <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-bold">Invited</span>}
                     </p>
                     <p className="text-xs text-gray-500">{m.email || m.userId}</p>
                   </div>
@@ -158,7 +163,7 @@ export default function TeamPage() {
                   <span className="px-2 py-1 rounded text-xs font-bold bg-gray-100 dark:bg-gray-700 text-[#111418] dark:text-white capitalize">
                     {m.role.replace("_", " ")}
                   </span>
-                  {isFounder && !isYou && (
+                  {isFounder && !isYou && m.role !== "founder" && (
                     <button
                       type="button"
                       onClick={() => removeMember(m)}
@@ -174,36 +179,50 @@ export default function TeamPage() {
         </ul>
 
         {isFounder && (
-          <form onSubmit={handleInvite} className="flex flex-wrap gap-4 items-end p-4 rounded-xl bg-[#f5f6f8] dark:bg-white/5">
-            <h3 className="w-full font-semibold text-sm text-[#5f6368] dark:text-gray-400">Invite member</h3>
-            <div className="flex-1 min-w-[200px]">
-              <input
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="Email address"
-                required
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-[#111418] dark:text-white"
-              />
-            </div>
-            <div className="w-40">
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as UserRole)}
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-[#111418] dark:text-white"
+          <div className="p-4 rounded-xl bg-[#f5f6f8] dark:bg-white/5 border border-[#e8eaed] dark:border-white/10">
+            <h3 className="font-semibold text-sm text-[#111418] dark:text-white mb-2">Share invite link</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              Anyone with this link can join after signing in. This link adds the user directly to your workspace. No email sending.
+            </p>
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="w-40">
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Role</label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as UserRole)}
+                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-[#111418] dark:text-white"
+                >
+                  <option value="team_member">Team member</option>
+                  <option value="investor">Investor</option>
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={handleGenerateLink}
+                disabled={generatingLink}
+                className="rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold disabled:opacity-50"
               >
-                <option value="team_member">Team member</option>
-                <option value="investor">Investor</option>
-              </select>
+                {generatingLink ? "Generating…" : "Generate invite link"}
+              </button>
             </div>
-            <button
-              type="submit"
-              disabled={inviting}
-              className="rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold disabled:opacity-50"
-            >
-              {inviting ? "Inviting…" : "Invite"}
-            </button>
-          </form>
+            {generatedLink && (
+              <div className="mt-4 flex flex-wrap gap-2 items-center">
+                <input
+                  type="text"
+                  readOnly
+                  value={generatedLink}
+                  className="flex-1 min-w-[200px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-[#111418] dark:text-white font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="rounded-lg h-10 px-4 bg-gray-200 dark:bg-gray-700 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-600"
+                >
+                  {linkCopied ? "Copied" : "Copy link"}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </section>
     </div>

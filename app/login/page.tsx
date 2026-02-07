@@ -2,23 +2,51 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RunwayLogo } from "@/components/RunwayLogo";
 import { useAuth } from "@/contexts/AuthContext";
+
+const LOGIN_REDIRECT_KEY = "runway_login_redirect";
+
+function safeRedirectPath(redirect: string | null): string {
+  if (!redirect || typeof redirect !== "string") return "/dashboard";
+  const path = redirect.startsWith("/") ? redirect : `/${redirect}`;
+  if (path.startsWith("/join/") || path.startsWith("/dashboard")) return path;
+  return "/dashboard";
+}
+
+function getRedirectFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("redirect");
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirectFromUrl, setRedirectFromUrl] = useState<string | null>(null);
   const { signIn, signInWithGoogle, user, isConfigured } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get("redirect") ?? redirectFromUrl;
 
   useEffect(() => {
-    if (user) router.replace("/dashboard");
-  }, [user, router]);
+    setRedirectFromUrl(getRedirectFromUrl());
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const stored = typeof window !== "undefined" ? sessionStorage.getItem(LOGIN_REDIRECT_KEY) : null;
+    const fromUrl = getRedirectFromUrl();
+    const path = safeRedirectPath(stored || redirectParam || fromUrl);
+    if (typeof window !== "undefined") sessionStorage.removeItem(LOGIN_REDIRECT_KEY);
+    router.replace(path);
+  }, [user, router, redirectParam]);
 
   if (user) return null;
+
+  const targetPath = safeRedirectPath(redirectParam || getRedirectFromUrl());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +54,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signIn(email, password);
-      router.push("/dashboard");
+      router.push(safeRedirectPath(getRedirectFromUrl() || redirectParam));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
@@ -37,12 +65,15 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setError("");
     setLoading(true);
+    const toStore = getRedirectFromUrl() || redirectParam;
+    if (toStore && typeof window !== "undefined") {
+      sessionStorage.setItem(LOGIN_REDIRECT_KEY, toStore);
+    }
     try {
       await signInWithGoogle();
-      // Redirect flow: page will navigate to Google; when user returns, onAuthStateChanged will fire and we redirect to dashboard
-      router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in with Google failed");
+      if (typeof window !== "undefined") sessionStorage.removeItem(LOGIN_REDIRECT_KEY);
       setLoading(false);
     } finally {
       setLoading(false);
@@ -163,7 +194,10 @@ export default function LoginPage() {
           </form>
           <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
             No account?{" "}
-            <Link href="/signup" className="text-primary font-semibold hover:underline">
+            <Link
+              href={(redirectParam || redirectFromUrl) ? `/signup?redirect=${encodeURIComponent(redirectParam || redirectFromUrl || "")}` : "/signup"}
+              className="text-primary font-semibold hover:underline"
+            >
               Sign up
             </Link>
           </p>

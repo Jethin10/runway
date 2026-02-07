@@ -2,9 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RunwayLogo } from "@/components/RunwayLogo";
 import { useAuth } from "@/contexts/AuthContext";
+
+function safeRedirectPath(redirect: string | null): string {
+  if (!redirect || typeof redirect !== "string") return "/dashboard";
+  const path = redirect.startsWith("/") ? redirect : `/${redirect}`;
+  if (path.startsWith("/join/") || path.startsWith("/dashboard")) return path;
+  return "/dashboard";
+}
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -14,12 +21,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const { signUp, user, isConfigured } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
 
   useEffect(() => {
-    if (user) router.replace("/dashboard");
-  }, [user, router]);
+    if (user) router.replace(safeRedirectPath(redirectParam));
+  }, [user, router, redirectParam]);
 
   if (user) return null;
+
+  const targetPath = safeRedirectPath(redirectParam);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +38,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signUp(email, password, displayName);
-      router.push("/dashboard");
+      router.push(targetPath);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {
@@ -114,7 +125,10 @@ export default function SignupPage() {
         </button>
         <p className="text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary font-semibold hover:underline">
+          <Link
+            href={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : "/login"}
+            className="text-primary font-semibold hover:underline"
+          >
             Sign in
           </Link>
         </p>

@@ -81,3 +81,12 @@ match /ledger/{ledgerId} {
 match /userProfiles/{userId} {
   allow read, write: if isAuthenticated() && request.auth.uid == userId;
 }
+
+# Invite-by-link: founder creates; any auth user can read (to validate token) and update (to mark used).
+# No email sending; intentionally no pending-invite UI.
+match /workspaceInvites/{inviteId} {
+  allow read: if isAuthenticated();
+  allow create: if isAuthenticated() && isFounder(get(/databases/$(database)/documents/workspaces/$(request.resource.data.workspaceId)));
+  allow update: if isAuthenticated();
+  allow delete: if isAuthenticated() && isFounder(get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)));
+}

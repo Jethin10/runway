@@ -104,7 +104,9 @@ export default function DashboardWorkspacesPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Welcome back, Founder</h1>
+          <h1 className="text-2xl font-bold text-[#111418] dark:text-white">
+          Welcome back, {user?.displayName?.trim().split(/\s+/)[0] || user?.email?.split("@")[0] || "there"}
+        </h1>
           <p className="text-[#5f6368] dark:text-gray-400 text-sm mt-0.5">Your workspaces</p>
         </div>
         <button

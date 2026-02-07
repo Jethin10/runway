@@ -31,6 +31,7 @@ import type {
   LedgerEntry,
   WorkspaceMember,
   UserRole,
+  WorkspaceInvite,
 } from "./types";
 
 const toMillis = (t: Timestamp | undefined) => (t ? t.toMillis() : 0);
@@ -105,12 +106,103 @@ export async function getWorkspacesForUser(userId: string): Promise<StartupWorks
   return out;
 }
 
+/** Remove undefined values so Firestore doesn't reject the update. */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    if (Array.isArray(v)) {
+      out[k] = v.map((item) =>
+        item !== null && typeof item === "object" && !Array.isArray(item)
+          ? stripUndefined(item as Record<string, unknown>)
+          : item
+      );
+    } else if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+      out[k] = stripUndefined(v as Record<string, unknown>);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 export async function updateWorkspace(
   workspaceId: string,
   updates: Partial<Pick<StartupWorkspace, "name" | "stage" | "members">>
 ) {
   const db = getFirebaseDb();
-  await updateDoc(doc(db, COLLECTIONS.WORKSPACES, workspaceId), updates as DocumentData);
+  const safe = stripUndefined(updates as Record<string, unknown>);
+  await updateDoc(doc(db, COLLECTIONS.WORKSPACES, workspaceId), safe as DocumentData);
+}
+
+// ---- Workspace invites (invite-by-link only; no email sending) ----
+function randomToken(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  for (let i = 0; i < 32; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  return out;
+}
+
+export async function createWorkspaceInvite(
+  workspaceId: string,
+  role: UserRole,
+  createdBy: string
+): Promise<{ inviteId: string; token: string }> {
+  const db = getFirebaseDb();
+  const token = randomToken();
+  const ref = doc(collection(db, COLLECTIONS.WORKSPACE_INVITES));
+  await setDoc(ref, {
+    workspaceId,
+    role,
+    token,
+    createdBy,
+    createdAt: serverTimestamp(),
+    expiresAt: null,
+    used: false,
+  });
+  return { inviteId: ref.id, token };
+}
+
+export async function getInviteByWorkspaceAndToken(
+  workspaceId: string,
+  token: string
+): Promise<WorkspaceInvite | null> {
+  const db = getFirebaseDb();
+  const q = query(
+    collection(db, COLLECTIONS.WORKSPACE_INVITES),
+    where("workspaceId", "==", workspaceId),
+    where("token", "==", token),
+    where("used", "==", false),
+    limit(1)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0].data();
+  const docSnap = snap.docs[0];
+  return {
+    id: docSnap.id,
+    workspaceId: d.workspaceId,
+    role: d.role,
+    token: d.token,
+    createdBy: d.createdBy,
+    createdAt: toMillis(d.createdAt),
+    expiresAt: d.expiresAt != null ? toMillis(d.expiresAt) : null,
+    used: d.used === true,
+    usedBy: d.usedBy ?? null,
+    usedAt: d.usedAt != null ? toMillis(d.usedAt) : null,
+  };
+}
+
+export async function markInviteUsed(
+  inviteId: string,
+  usedBy: string
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, COLLECTIONS.WORKSPACE_INVITES, inviteId), {
+    used: true,
+    usedBy,
+    usedAt: serverTimestamp(),
+  } as DocumentData);
 }
 
 // ---- Milestones ----

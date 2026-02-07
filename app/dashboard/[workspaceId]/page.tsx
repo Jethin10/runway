@@ -82,9 +82,16 @@ export default function WorkspaceOverviewPage() {
   const role = workspace ? getRoleInWorkspace(user?.uid ?? undefined, workspace.members) : null;
   const isFounder = role === "founder";
   const canWrite = role === "founder" || role === "team_member";
+  const currentMember = workspace?.members.find((m) => m.userId === user?.uid);
+  const firstName =
+    currentMember?.displayName?.trim().split(/\s+/)[0] ||
+    user?.displayName?.trim().split(/\s+/)[0] ||
+    user?.email?.split("@")[0] ||
+    "there";
 
   const searchParams = useSearchParams();
   const fromOnboarding = searchParams.get("fromOnboarding") === "1";
+  const justJoined = searchParams.get("joined") === "1";
   const currentSprint = sprints.find((s) => !s.completed && s.locked) ?? sprints.find((s) => !s.completed);
   const draftSprint = sprints.find((s) => !s.completed && !s.locked);
   const executionInsights = getExecutionInsights(milestones, tasks, sprints);
@@ -217,6 +224,11 @@ export default function WorkspaceOverviewPage() {
 
   return (
     <div className="space-y-12">
+      {justJoined && (
+        <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4">
+          <p className="text-sm text-green-800 dark:text-green-200 font-medium">You&apos;ve joined the workspace.</p>
+        </div>
+      )}
       {fromOnboarding && (
         <div className="rounded-xl border border-[#e2e8f0] dark:border-slate-700 bg-[#f0f9ff] dark:bg-slate-800/50 p-4">
           <p className="text-sm text-[#0f172a] dark:text-white">
@@ -234,7 +246,7 @@ export default function WorkspaceOverviewPage() {
       )}
 
       <div>
-        <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Welcome back, Founder</h1>
+        <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Welcome back, {firstName}</h1>
         <p className="text-[#5f6368] dark:text-gray-400 text-sm mt-0.5">Your startup workspace</p>
       </div>
 
@@ -721,7 +733,7 @@ export default function WorkspaceOverviewPage() {
           <span className="material-symbols-outlined text-lg">analytics</span>
           Analytics
         </Link>
-        {isFounder && (
+        {(role === "founder" || role === "investor") && (
           <Link
             href={`/dashboard/${workspaceId}/investor`}
             className="inline-flex items-center gap-2 rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700"

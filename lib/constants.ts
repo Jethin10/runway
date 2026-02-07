@@ -7,4 +7,5 @@ export const COLLECTIONS = {
   VALIDATIONS: "validations",
   LEDGER: "ledger",
   USER_PROFILES: "userProfiles",
+  WORKSPACE_INVITES: "workspaceInvites",
 } as const;
