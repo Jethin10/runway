@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getWorkspace, getInviteByWorkspaceAndToken, markInviteUsed, updateWorkspace } from "@/lib/firestore";
+import type { WorkspaceMember } from "@/lib/types";
 
 /**
  * Invite-by-link join flow. No email sending; link is shared manually.
@@ -79,13 +80,13 @@ export default function JoinWorkspacePage() {
 
       setStatus("joining");
 
-      const newMember: { userId: string; role: string; email?: string; displayName?: string } = {
+      const newMember: WorkspaceMember = {
         userId: user.uid,
         role: invite.role,
       };
       if (user.email != null && user.email !== "") newMember.email = user.email;
       if (user.displayName != null && user.displayName !== "") newMember.displayName = user.displayName;
-      const updatedMembers = [...workspace.members, newMember];
+      const updatedMembers: WorkspaceMember[] = [...workspace.members, newMember];
       await updateWorkspace(workspaceId, { members: updatedMembers });
       await markInviteUsed(invite.id, user.uid);
       if (cancelled) return;

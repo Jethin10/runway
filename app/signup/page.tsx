@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RunwayLogo } from "@/components/RunwayLogo";
@@ -13,7 +13,7 @@ function safeRedirectPath(redirect: string | null): string {
   return "/dashboard";
 }
 
-export default function SignupPage() {
+function SignupContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -134,5 +134,13 @@ export default function SignupPage() {
         </p>
       </form>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#f5f6f8] dark:bg-[#111418]">Loading…</div>}>
+      <SignupContent />
+    </Suspense>
   );
 }
