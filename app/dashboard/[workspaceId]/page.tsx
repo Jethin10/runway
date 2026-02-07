@@ -726,32 +726,6 @@ export default function WorkspaceOverviewPage() {
           </div>
         </div>
       )}
-
-      <div className="flex flex-wrap gap-4 pt-2">
-        <Link
-          href={`/dashboard/${workspaceId}/sprints`}
-          className="inline-flex items-center gap-2 rounded-lg h-10 px-4 bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20"
-        >
-          <span className="material-symbols-outlined text-lg">update</span>
-          Sprints
-        </Link>
-        <Link
-          href={`/dashboard/${workspaceId}/analytics`}
-          className="inline-flex items-center gap-2 rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700"
-        >
-          <span className="material-symbols-outlined text-lg">analytics</span>
-          Analytics
-        </Link>
-        {(role === "founder" || role === "investor") && (
-          <Link
-            href={`/dashboard/${workspaceId}/investor`}
-            className="inline-flex items-center gap-2 rounded-lg h-10 px-4 bg-gray-100 dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700"
-          >
-            <span className="material-symbols-outlined text-lg">summarize</span>
-            Investor readiness
-          </Link>
-        )}
-      </div>
     </div>
   );
 }
