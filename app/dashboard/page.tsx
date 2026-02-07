@@ -55,7 +55,6 @@ export default function DashboardWorkspacesPage() {
               displayName: user.displayName ?? undefined,
             },
           ],
-          milestoneIds: [],
           createdAt: Date.now(),
         },
       ]);
@@ -77,16 +76,10 @@ export default function DashboardWorkspacesPage() {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-10">
-        <div>
-          <h1 className="text-2xl font-bold text-[#111418] dark:text-white">
-            Startup workspaces
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Create or open a workspace to manage execution, sprints, and validation.
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Welcome back, Founder</h1>
+        <p className="text-[#5f6368] dark:text-gray-400 text-sm mt-0.5">Your workspaces</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -94,7 +87,7 @@ export default function DashboardWorkspacesPage() {
           <Link
             key={ws.id}
             href={`/dashboard/${ws.id}`}
-            className="block p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/50 hover:border-primary/30 hover:shadow-lg transition-all"
+            className="block p-5 rounded-2xl border border-[#e8eaed] dark:border-white/5 bg-white dark:bg-[#1a2530] shadow-sm hover:shadow-md hover:border-primary/20 transition-all"
           >
             <div className="flex items-center gap-3 mb-3">
               <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -102,18 +95,18 @@ export default function DashboardWorkspacesPage() {
               </div>
               <div>
                 <h3 className="font-bold text-[#111418] dark:text-white">{ws.name}</h3>
-                <p className="text-xs text-gray-500">{ws.stage}</p>
+                <p className="text-xs text-[#5f6368] dark:text-gray-400">{ws.stage}</p>
               </div>
             </div>
-            <p className="text-sm text-gray-500">
-              {ws.milestoneIds.length} milestones · You’re {ws.createdBy === user?.uid ? "founder" : "member"}
+            <p className="text-sm text-[#5f6368] dark:text-gray-400">
+ You’re {ws.createdBy === user?.uid ? "founder" : "member"}
             </p>
           </Link>
         ))}
 
         <form
           onSubmit={handleCreate}
-          className="p-6 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex flex-col gap-4"
+          className="p-5 rounded-2xl border border-dashed border-[#dadce0] dark:border-white/10 bg-white/50 dark:bg-[#1a2530]/50 flex flex-col gap-4"
         >
           <h3 className="font-bold text-[#111418] dark:text-white">New workspace</h3>
           <input

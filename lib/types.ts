@@ -1,6 +1,6 @@
 /**
  * Runway domain model types.
- * Startup-oriented semantics: workspace, milestones, sprints, validation.
+ * Workspace, tasks, sprints, validation. No milestones.
  */
 
 export type UserRole = "founder" | "team_member" | "investor";
@@ -18,23 +18,8 @@ export interface StartupWorkspace {
   id: string;
   name: string;
   stage: WorkspaceStage;
-  createdBy: string; // founderId
+  createdBy: string;
   members: WorkspaceMember[];
-  milestoneIds: string[];
-  createdAt: number; // Firestore timestamp as ms
-}
-
-export type MilestoneStatus = "planned" | "active" | "completed";
-
-export interface Milestone {
-  id: string;
-  workspaceId: string;
-  title: string;
-  description: string;
-  status: MilestoneStatus;
-  progressPercentage: number;
-  taskIds: string[];
-  order: number;
   createdAt: number;
 }
 
@@ -43,7 +28,7 @@ export type TaskStatus = "todo" | "in_progress" | "done";
 export interface Task {
   id: string;
   workspaceId: string;
-  milestoneId: string;
+  milestoneId: string | null; // legacy; unused in app
   sprintId: string | null;
   title: string;
   ownerId: string | null;
@@ -86,7 +71,7 @@ export interface ValidationEntry {
   id: string;
   workspaceId: string;
   sprintId: string;
-  milestoneId: string;
+  milestoneId: string | null; // legacy; optional
   type: ValidationType;
   summary: string;
   qualitativeNotes: string;

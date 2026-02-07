@@ -7,17 +7,18 @@ import { getRoleInWorkspace } from "@/contexts/AuthContext";
 import {
   getWorkspace,
   getSprints,
-  getMilestones,
   getTasksForWorkspace,
   getTasksForSprint,
   createSprint,
+  createTask,
   lockSprint,
   closeSprint,
+  deleteSprint,
   updateTask,
 } from "@/lib/firestore";
 import { addLedgerEntry } from "@/lib/firestore";
 import { hashSprintCommitment, hashSprintCompletion } from "@/lib/ledger-mock";
-import type { StartupWorkspace, Sprint, Milestone, Task } from "@/lib/types";
+import type { StartupWorkspace, Sprint, Task } from "@/lib/types";
 
 export default function SprintsPage() {
   const params = useParams();
@@ -25,33 +26,33 @@ export default function SprintsPage() {
   const { user } = useAuth();
   const [workspace, setWorkspace] = useState<StartupWorkspace | null>(null);
   const [sprints, setSprints] = useState<Sprint[]>([]);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedSprint, setSelectedSprint] = useState<Sprint | null>(null);
   const [sprintTasks, setSprintTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Create sprint form
+  // Create sprint form — single "Sprint items" list (tasks only; no separate goals)
   const [showCreate, setShowCreate] = useState(false);
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
-  const [goals, setGoals] = useState([{ id: "1", text: "" }]);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [newItemTitle, setNewItemTitle] = useState("");
+  const [newItems, setNewItems] = useState<{ title: string }[]>([]);
   const [creating, setCreating] = useState(false);
   const [locking, setLocking] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "board">("list");
 
   useEffect(() => {
     if (!workspaceId) return;
     Promise.all([
       getWorkspace(workspaceId),
       getSprints(workspaceId),
-      getMilestones(workspaceId),
       getTasksForWorkspace(workspaceId),
-    ]).then(([ws, sp, ms, t]) => {
+    ]).then(([ws, sp, t]) => {
       setWorkspace(ws ?? null);
       setSprints(sp);
-      setMilestones(ms);
       setTasks(t);
     }).finally(() => setLoading(false));
   }, [workspaceId]);
@@ -68,17 +69,23 @@ export default function SprintsPage() {
   const isFounder = role === "founder";
   const canWrite = role === "founder" || role === "team_member";
 
-  const addGoal = () => setGoals((g) => [...g, { id: String(Date.now()), text: "" }]);
-  const updateGoal = (id: string, text: string) => {
-    setGoals((g) => g.map((x) => (x.id === id ? { ...x, text } : x)));
+  const addNewItem = () => {
+    if (!newItemTitle.trim()) return;
+    setNewItems((prev) => [...prev, { title: newItemTitle.trim() }]);
+    setNewItemTitle("");
   };
+  const removeNewItem = (index: number) => setNewItems((prev) => prev.filter((_, i) => i !== index));
 
   const handleCreateSprint = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !workspaceId || !weekStart || !weekEnd) return;
-    const goalList = goals.filter((g) => g.text.trim());
-    if (goalList.length === 0) {
-      alert("Add at least one sprint goal.");
+    const allTaskIds = [...selectedTaskIds];
+    for (const item of newItems) {
+      const taskId = await createTask(workspaceId, null, null, item.title, null);
+      allTaskIds.push(taskId);
+    }
+    if (allTaskIds.length === 0) {
+      alert("Add at least one sprint item: select existing tasks or add a new item.");
       return;
     }
     setCreating(true);
@@ -87,8 +94,8 @@ export default function SprintsPage() {
         workspaceId,
         weekStart,
         weekEnd,
-        goalList,
-        selectedTaskIds,
+        [], // goals merged into tasks; no separate goals
+        allTaskIds,
         user.uid
       );
       const newSprint: Sprint = {
@@ -96,8 +103,8 @@ export default function SprintsPage() {
         workspaceId,
         weekStartDate: weekStart,
         weekEndDate: weekEnd,
-        goals: goalList,
-        taskIds: selectedTaskIds,
+        goals: [],
+        taskIds: allTaskIds,
         locked: false,
         completed: false,
         completionStats: null,
@@ -105,11 +112,13 @@ export default function SprintsPage() {
         createdBy: user.uid,
       };
       setSprints((s) => [newSprint, ...s]);
+      getTasksForWorkspace(workspaceId).then(setTasks);
       setShowCreate(false);
       setWeekStart("");
       setWeekEnd("");
-      setGoals([{ id: "1", text: "" }]);
       setSelectedTaskIds([]);
+      setNewItems([]);
+      setNewItemTitle("");
     } finally {
       setCreating(false);
     }
@@ -179,6 +188,20 @@ export default function SprintsPage() {
     setTasks((t) => t.map((x) => (x.id === taskId ? { ...x, status } : x)));
   };
 
+  const handleDeleteSprint = async (sprint: Sprint) => {
+    if (!isFounder) return;
+    if (!confirm(`Delete sprint ${sprint.weekStartDate} → ${sprint.weekEndDate}? Tasks will be unassigned from this sprint.`)) return;
+    setDeleting(true);
+    try {
+      await deleteSprint(sprint.id);
+      setSprints((s) => s.filter((x) => x.id !== sprint.id));
+      if (selectedSprint?.id === sprint.id) setSelectedSprint(null);
+      getTasksForWorkspace(workspaceId).then(setTasks);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading || !workspace) {
     return (
       <div className="py-12">
@@ -230,24 +253,9 @@ export default function SprintsPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Goals</label>
-            {goals.map((g) => (
-              <input
-                key={g.id}
-                type="text"
-                value={g.text}
-                onChange={(e) => updateGoal(g.id, e.target.value)}
-                placeholder="Sprint goal"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2 mb-2"
-              />
-            ))}
-            <button type="button" onClick={addGoal} className="text-sm text-primary font-semibold hover:underline">
-              + Add goal
-            </button>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Assign tasks</label>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+            <label className="block text-sm font-medium mb-1">Sprint items</label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Select existing tasks or add new items (goals and tasks in one list).</p>
+            <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto mb-3">
               {tasks.filter((t) => !t.sprintId || t.sprintId === "").map((t) => (
                 <label key={t.id} className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -262,6 +270,33 @@ export default function SprintsPage() {
                 <p className="text-xs text-gray-500">All tasks are already in a sprint.</p>
               )}
             </div>
+            <div className="flex flex-wrap gap-2 items-end">
+              <input
+                type="text"
+                value={newItemTitle}
+                onChange={(e) => setNewItemTitle(e.target.value)}
+                placeholder="New item title"
+                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm min-w-[160px]"
+              />
+              <button
+                type="button"
+                onClick={addNewItem}
+                disabled={!newItemTitle.trim()}
+                className="rounded-lg h-9 px-3 bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 disabled:opacity-50"
+              >
+                + Add item
+              </button>
+            </div>
+            {newItems.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {newItems.map((item, i) => (
+                  <li key={i} className="flex items-center justify-between text-sm py-1">
+                    <span>{item.title}</span>
+                    <button type="button" onClick={() => removeNewItem(i)} className="text-red-500 hover:underline">Remove</button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="flex gap-3">
             <button
@@ -303,7 +338,7 @@ export default function SprintsPage() {
                     <div>
                       <p className="font-semibold">{s.weekStartDate} → {s.weekEndDate}</p>
                       <p className="text-xs text-gray-500">
-                        {s.goals.length} goals · {s.taskIds.length} tasks
+                        {s.taskIds.length} item{s.taskIds.length !== 1 ? "s" : ""}
                         {s.locked && " · Locked"}
                         {s.completed && " · Closed"}
                       </p>
@@ -338,6 +373,18 @@ export default function SprintsPage() {
                       Close sprint
                     </button>
                   )}
+                  {isFounder && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSprint(s);
+                      }}
+                      disabled={deleting}
+                      className="mt-2 text-xs font-bold text-red-600 dark:text-red-400 hover:underline disabled:opacity-50 ml-2"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -345,38 +392,89 @@ export default function SprintsPage() {
         </div>
 
         <div className="space-y-4">
-          <h3 className="font-bold">Sprint tasks</h3>
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="font-bold">Sprint items</h3>
+            {selectedSprint && sprintTasks.length > 0 && (
+              <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={`px-3 py-1 text-sm font-medium rounded-md ${viewMode === "list" ? "bg-primary text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"}`}
+                >
+                  List
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("board")}
+                  className={`px-3 py-1 text-sm font-medium rounded-md ${viewMode === "board" ? "bg-primary text-white" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"}`}
+                >
+                  Board
+                </button>
+              </div>
+            )}
+          </div>
           {!selectedSprint ? (
-            <p className="text-gray-500 text-sm">Select a sprint to see and update tasks.</p>
+            <p className="text-gray-500 text-sm">Select a sprint to see and update items.</p>
+          ) : sprintTasks.length === 0 ? (
+            <p className="text-gray-500 text-sm">No items in this sprint.</p>
+          ) : viewMode === "board" ? (
+            <div className="grid grid-cols-3 gap-4">
+              {(["todo", "in_progress", "done"] as const).map((status) => (
+                <div key={status} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-white/5 p-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                    {status === "done" ? "Done" : status === "in_progress" ? "In progress" : "To do"}
+                  </h4>
+                  <div className="space-y-2">
+                    {sprintTasks
+                      .filter((t) => t.status === status)
+                      .map((t) => (
+                        <div
+                          key={t.id}
+                          className="flex items-center justify-between p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                        >
+                          <span className="text-sm font-medium truncate">{t.title}</span>
+                          {canWrite && !selectedSprint.completed && (
+                            <select
+                              value={t.status}
+                              onChange={(e) => updateTaskStatus(t.id, e.target.value as Task["status"])}
+                              className="text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-1.5 py-0.5"
+                            >
+                              <option value="todo">To do</option>
+                              <option value="in_progress">In progress</option>
+                              <option value="done">Done</option>
+                            </select>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <ul className="space-y-2">
-              {sprintTasks.length === 0 ? (
-                <p className="text-gray-500 text-sm">No tasks in this sprint.</p>
-              ) : (
-                sprintTasks.map((t) => (
-                  <li
-                    key={t.id}
-                    className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700"
-                  >
-                    <span className="font-medium text-sm">{t.title}</span>
-                    {canWrite && !selectedSprint.completed ? (
-                      <select
-                        value={t.status}
-                        onChange={(e) => updateTaskStatus(t.id, e.target.value as Task["status"])}
-                        className="text-sm rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1"
-                      >
-                        <option value="todo">To do</option>
-                        <option value="in_progress">In progress</option>
-                        <option value="done">Done</option>
-                      </select>
-                    ) : (
-                      <span className="text-xs font-bold px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 uppercase">
-                        {t.status}
-                      </span>
-                    )}
-                  </li>
-                ))
-              )}
+              {sprintTasks.map((t) => (
+                <li
+                  key={t.id}
+                  className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700"
+                >
+                  <span className="font-medium text-sm">{t.title}</span>
+                  {canWrite && !selectedSprint.completed ? (
+                    <select
+                      value={t.status}
+                      onChange={(e) => updateTaskStatus(t.id, e.target.value as Task["status"])}
+                      className="text-sm rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1"
+                    >
+                      <option value="todo">To do</option>
+                      <option value="in_progress">In progress</option>
+                      <option value="done">Done</option>
+                    </select>
+                  ) : (
+                    <span className="text-xs font-bold px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 uppercase">
+                      {t.status}
+                    </span>
+                  )}
+                </li>
+              ))}
             </ul>
           )}
         </div>

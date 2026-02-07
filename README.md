@@ -63,6 +63,30 @@ Unified operational workspace for early-stage startup founders. Built for IIT Ja
 
    Open [http://localhost:3000](http://localhost:3000). Sign up, create a workspace, add milestones and tasks, then create/lock/close sprints.
 
+## Deploy (e.g. Vercel)
+
+1. **Push to GitHub** (if not already).
+
+2. **Import on [Vercel](https://vercel.com)**  
+   New Project → Import your repo → Framework: **Next.js** (auto-detected).
+
+3. **Environment variables**  
+   In the Vercel project → Settings → Environment Variables, add the same Firebase vars you use locally:
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`
+
+4. **Firebase Auth (production domain)**  
+   In [Firebase Console](https://console.firebase.google.com) → Authentication → Sign-in method → Authorized domains, add your Vercel domain (e.g. `your-app.vercel.app`).
+
+5. **Deploy**  
+   Deploy from the Vercel dashboard or by pushing to your linked branch. Preview URLs get a unique domain; add those to Authorized domains if you want to sign in on previews.
+
+**CLI option:** Install Vercel CLI (`npm i -g vercel`), run `vercel` in the project root, and follow the prompts (and add env vars when asked or in the dashboard).
+
 ## Demo flow
 
 1. **Sign up** → Create a **Startup workspace** (you’re the founder).

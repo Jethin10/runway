@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut } from "firebase/auth";
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { isFirebaseConfigured, getFirebaseAuth } from "@/lib/firebase";
 import type { UserRole } from "@/lib/types";
 
@@ -10,6 +10,7 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   isConfigured: boolean;
@@ -40,6 +41,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
+  const signInWithGoogle = async () => {
+    const auth = getFirebaseAuth();
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  };
+
   const signUp = async (email: string, password: string, displayName?: string) => {
     const auth = getFirebaseAuth();
     const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -59,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         loading,
         signIn,
+        signInWithGoogle,
         signUp,
         signOut,
         isConfigured,

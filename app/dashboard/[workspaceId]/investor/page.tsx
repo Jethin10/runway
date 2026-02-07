@@ -7,7 +7,6 @@ import { getRoleInWorkspace } from "@/contexts/AuthContext";
 import {
   getWorkspace,
   getSprints,
-  getMilestones,
   getTasksForWorkspace,
   getValidationsForWorkspace,
 } from "@/lib/firestore";
@@ -31,16 +30,15 @@ export default function InvestorPage() {
   useEffect(() => {
     if (!workspaceId || !workspace) return;
     Promise.all([
-      getMilestones(workspaceId),
       getTasksForWorkspace(workspaceId),
       getValidationsForWorkspace(workspaceId),
       getSprints(workspaceId),
-    ]).then(([milestones, tasks, validations, sprints]) => {
+    ]).then(([tasks, validations, sprints]) => {
       setSummary(
         generateInvestorSummary(
           workspace!.name,
           workspace!.stage,
-          milestones,
+          [],
           tasks,
           validations,
           sprints
@@ -82,9 +80,9 @@ export default function InvestorPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Investor snapshot</h1>
+        <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Investor pitch outline</h1>
         <p className="text-gray-500 text-sm">
-          Structured summary for stakeholders. Generated from execution and validation data.
+          Auto-generated from your startup data: problem, solution, traction, and roadmap.
         </p>
       </div>
 
@@ -94,16 +92,16 @@ export default function InvestorPage() {
           <p className="text-[#111418] dark:text-white leading-relaxed">{summary.problem}</p>
         </section>
         <section>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">
-            Execution progress
-          </h3>
-          <p className="text-[#111418] dark:text-white leading-relaxed">{summary.executionProgress}</p>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">Solution</h3>
+          <p className="text-[#111418] dark:text-white leading-relaxed">{summary.solution}</p>
         </section>
         <section>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">
-            Validation status
-          </h3>
-          <p className="text-[#111418] dark:text-white leading-relaxed">{summary.validationStatus}</p>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">Traction</h3>
+          <p className="text-[#111418] dark:text-white leading-relaxed">{summary.traction}</p>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <p className="text-gray-600 dark:text-gray-400">{summary.executionProgress}</p>
+            <p className="text-gray-600 dark:text-gray-400">{summary.validationStatus}</p>
+          </div>
         </section>
         <section>
           <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">Roadmap</h3>

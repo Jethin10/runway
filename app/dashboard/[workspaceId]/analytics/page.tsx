@@ -5,18 +5,16 @@ import { useParams } from "next/navigation";
 import {
   getWorkspace,
   getSprints,
-  getMilestones,
   getTasksForWorkspace,
   getValidationsForWorkspace,
 } from "@/lib/firestore";
-import type { StartupWorkspace, Sprint, Milestone, Task, ValidationEntry } from "@/lib/types";
+import type { StartupWorkspace, Sprint, Task, ValidationEntry } from "@/lib/types";
 
 export default function AnalyticsPage() {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
   const [workspace, setWorkspace] = useState<StartupWorkspace | null>(null);
   const [sprints, setSprints] = useState<Sprint[]>([]);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [validations, setValidations] = useState<ValidationEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,14 +24,12 @@ export default function AnalyticsPage() {
     Promise.all([
       getWorkspace(workspaceId),
       getSprints(workspaceId),
-      getMilestones(workspaceId),
       getTasksForWorkspace(workspaceId),
       getValidationsForWorkspace(workspaceId),
     ])
-      .then(([ws, sp, ms, t, v]) => {
+      .then(([ws, sp, t, v]) => {
         setWorkspace(ws ?? null);
         setSprints(sp);
-        setMilestones(ms);
         setTasks(t);
         setValidations(v);
       })
@@ -69,7 +65,6 @@ export default function AnalyticsPage() {
     count: validations.filter((v) => v.sprintId === s.id).length,
   }));
 
-  const milestonesCompleted = milestones.filter((m) => m.status === "completed").length;
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.status === "done").length;
   const taskCompletionPct = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
@@ -88,12 +83,6 @@ export default function AnalyticsPage() {
           <p className="text-sm font-semibold text-gray-500 mb-1">Tasks completed</p>
           <p className="text-4xl font-extrabold text-primary">{doneTasks}</p>
           <p className="text-xs text-gray-400">{totalTasks} total ({taskCompletionPct}%)</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
-          <p className="text-sm font-semibold text-gray-500 mb-1">Milestones completed</p>
-          <p className="text-4xl font-extrabold text-[#111418] dark:text-white">
-            {milestonesCompleted}/{milestones.length}
-          </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
           <p className="text-sm font-semibold text-gray-500 mb-1">Sprint reliability</p>

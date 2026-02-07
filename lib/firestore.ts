@@ -24,7 +24,6 @@ import { getFirebaseDb } from "./firebase";
 import { COLLECTIONS } from "./constants";
 import type {
   StartupWorkspace,
-  Milestone,
   Task,
   Sprint,
   ValidationEntry,
@@ -53,7 +52,6 @@ export async function createWorkspace(
     stage,
     createdBy: founderId,
     members,
-    milestoneIds: [],
     createdAt: serverTimestamp(),
   });
   return ref.id;
@@ -70,7 +68,6 @@ export async function getWorkspace(workspaceId: string): Promise<StartupWorkspac
     stage: d.stage,
     createdBy: d.createdBy,
     members: d.members ?? [],
-    milestoneIds: d.milestoneIds ?? [],
     createdAt: toMillis(d.createdAt),
   };
 }
@@ -97,7 +94,6 @@ export async function getWorkspacesForUser(userId: string): Promise<StartupWorks
         stage: d.stage,
         createdBy: d.createdBy,
         members: members,
-        milestoneIds: d.milestoneIds ?? [],
         createdAt: toMillis(d.createdAt) || Date.now(),
       });
     }
@@ -105,71 +101,18 @@ export async function getWorkspacesForUser(userId: string): Promise<StartupWorks
   return out;
 }
 
-// ---- Milestones ----
-export async function createMilestone(
+export async function updateWorkspace(
   workspaceId: string,
-  title: string,
-  description: string,
-  order: number
-): Promise<string> {
-  const db = getFirebaseDb();
-  const ref = doc(collection(db, COLLECTIONS.MILESTONES));
-  await setDoc(ref, {
-    workspaceId,
-    title,
-    description,
-    status: "planned",
-    progressPercentage: 0,
-    taskIds: [],
-    order,
-    createdAt: serverTimestamp(),
-  });
-  const ws = await getWorkspace(workspaceId);
-  if (ws) {
-    await updateDoc(doc(db, COLLECTIONS.WORKSPACES, workspaceId), {
-      milestoneIds: [...ws.milestoneIds, ref.id],
-    });
-  }
-  return ref.id;
-}
-
-export async function getMilestones(workspaceId: string): Promise<Milestone[]> {
-  const db = getFirebaseDb();
-  const snap = await getDocs(
-    query(
-      collection(db, COLLECTIONS.MILESTONES),
-      where("workspaceId", "==", workspaceId),
-      orderBy("order", "asc")
-    )
-  );
-  return snap.docs.map((s) => {
-    const d = s.data();
-    return {
-      id: s.id,
-      workspaceId: d.workspaceId,
-      title: d.title,
-      description: d.description,
-      status: d.status,
-      progressPercentage: d.progressPercentage ?? 0,
-      taskIds: d.taskIds ?? [],
-      order: d.order ?? 0,
-      createdAt: toMillis(d.createdAt),
-    };
-  });
-}
-
-export async function updateMilestone(
-  milestoneId: string,
-  updates: Partial<Pick<Milestone, "title" | "description" | "status" | "progressPercentage">>
+  updates: Partial<Pick<StartupWorkspace, "name" | "stage" | "members">>
 ) {
   const db = getFirebaseDb();
-  await updateDoc(doc(db, COLLECTIONS.MILESTONES, milestoneId), updates as DocumentData);
+  await updateDoc(doc(db, COLLECTIONS.WORKSPACES, workspaceId), updates as DocumentData);
 }
 
 // ---- Tasks ----
 export async function createTask(
   workspaceId: string,
-  milestoneId: string,
+  milestoneId: string | null,
   sprintId: string | null,
   title: string,
   ownerId: string | null
@@ -179,7 +122,7 @@ export async function createTask(
   const now = Date.now();
   await setDoc(ref, {
     workspaceId,
-    milestoneId,
+    milestoneId: milestoneId ?? null,
     sprintId,
     title,
     ownerId,
@@ -187,31 +130,20 @@ export async function createTask(
     createdAt: now,
     updatedAt: now,
   });
-  const milestones = await getMilestones(workspaceId);
-  const m = milestones.find((x) => x.id === milestoneId);
-  if (m) {
-    await updateDoc(doc(db, COLLECTIONS.MILESTONES, milestoneId), {
-      taskIds: [...m.taskIds, ref.id],
-    });
-  }
   return ref.id;
 }
 
 export async function getTasksForWorkspace(workspaceId: string): Promise<Task[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
-    query(
-      collection(db, COLLECTIONS.TASKS),
-      where("workspaceId", "==", workspaceId),
-      orderBy("updatedAt", "desc")
-    )
+    query(collection(db, COLLECTIONS.TASKS), where("workspaceId", "==", workspaceId))
   );
-  return snap.docs.map((s) => {
+  const tasks = snap.docs.map((s) => {
     const d = s.data();
     return {
       id: s.id,
       workspaceId: d.workspaceId,
-      milestoneId: d.milestoneId,
+      milestoneId: d.milestoneId ?? null,
       sprintId: d.sprintId ?? null,
       title: d.title,
       ownerId: d.ownerId ?? null,
@@ -220,23 +152,21 @@ export async function getTasksForWorkspace(workspaceId: string): Promise<Task[]>
       updatedAt: d.updatedAt ?? 0,
     };
   });
+  tasks.sort((a, b) => b.updatedAt - a.updatedAt);
+  return tasks;
 }
 
 export async function getTasksForSprint(sprintId: string): Promise<Task[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
-    query(
-      collection(db, COLLECTIONS.TASKS),
-      where("sprintId", "==", sprintId),
-      orderBy("updatedAt", "desc")
-    )
+    query(collection(db, COLLECTIONS.TASKS), where("sprintId", "==", sprintId))
   );
-  return snap.docs.map((s) => {
+  const tasks = snap.docs.map((s) => {
     const d = s.data();
     return {
       id: s.id,
       workspaceId: d.workspaceId,
-      milestoneId: d.milestoneId,
+      milestoneId: d.milestoneId ?? null,
       sprintId: d.sprintId ?? null,
       title: d.title,
       ownerId: d.ownerId ?? null,
@@ -245,6 +175,8 @@ export async function getTasksForSprint(sprintId: string): Promise<Task[]> {
       updatedAt: d.updatedAt ?? 0,
     };
   });
+  tasks.sort((a, b) => b.updatedAt - a.updatedAt);
+  return tasks;
 }
 
 export async function updateTask(
@@ -290,14 +222,9 @@ export async function createSprint(
 export async function getSprints(workspaceId: string): Promise<Sprint[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
-    query(
-      collection(db, COLLECTIONS.SPRINTS),
-      where("workspaceId", "==", workspaceId),
-      orderBy("createdAt", "desc"),
-      limit(50)
-    )
+    query(collection(db, COLLECTIONS.SPRINTS), where("workspaceId", "==", workspaceId))
   );
-  return snap.docs.map((s) => {
+  const sprints = snap.docs.map((s) => {
     const d = s.data();
     return {
       id: s.id,
@@ -313,6 +240,8 @@ export async function getSprints(workspaceId: string): Promise<Sprint[]> {
       createdBy: d.createdBy,
     };
   });
+  sprints.sort((a, b) => b.createdAt - a.createdAt);
+  return sprints.slice(0, 50);
 }
 
 export async function lockSprint(sprintId: string) {
@@ -329,6 +258,15 @@ export async function closeSprint(
     completed: true,
     completionStats: completionStats,
   });
+}
+
+export async function deleteSprint(sprintId: string): Promise<void> {
+  const db = getFirebaseDb();
+  const tasks = await getTasksForSprint(sprintId);
+  for (const t of tasks) {
+    await updateTask(t.id, { sprintId: null });
+  }
+  await deleteDoc(doc(db, COLLECTIONS.SPRINTS, sprintId));
 }
 
 export async function getSprint(sprintId: string): Promise<Sprint | null> {
@@ -355,7 +293,7 @@ export async function getSprint(sprintId: string): Promise<Sprint | null> {
 export async function createValidationEntry(
   workspaceId: string,
   sprintId: string,
-  milestoneId: string,
+  milestoneId: string | null,
   type: ValidationEntry["type"],
   summary: string,
   qualitativeNotes: string,
@@ -366,7 +304,7 @@ export async function createValidationEntry(
   await setDoc(ref, {
     workspaceId,
     sprintId,
-    milestoneId,
+    milestoneId: milestoneId ?? null,
     type,
     summary,
     qualitativeNotes,
@@ -381,20 +319,15 @@ export async function getValidationsForWorkspace(
 ): Promise<ValidationEntry[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
-    query(
-      collection(db, COLLECTIONS.VALIDATIONS),
-      where("workspaceId", "==", workspaceId),
-      orderBy("createdAt", "desc"),
-      limit(100)
-    )
+    query(collection(db, COLLECTIONS.VALIDATIONS), where("workspaceId", "==", workspaceId))
   );
-  return snap.docs.map((s) => {
+  const entries = snap.docs.map((s) => {
     const d = s.data();
     return {
       id: s.id,
       workspaceId: d.workspaceId,
       sprintId: d.sprintId,
-      milestoneId: d.milestoneId,
+      milestoneId: d.milestoneId ?? null,
       type: d.type,
       summary: d.summary,
       qualitativeNotes: d.qualitativeNotes,
@@ -402,6 +335,8 @@ export async function getValidationsForWorkspace(
       createdAt: toMillis(d.createdAt),
     };
   });
+  entries.sort((a, b) => b.createdAt - a.createdAt);
+  return entries.slice(0, 100);
 }
 
 // ---- Ledger (blockchain mock) ----
@@ -430,14 +365,9 @@ export async function getLedgerForWorkspace(
 ): Promise<LedgerEntry[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
-    query(
-      collection(db, COLLECTIONS.LEDGER),
-      where("workspaceId", "==", workspaceId),
-      orderBy("timestamp", "desc"),
-      limit(50)
-    )
+    query(collection(db, COLLECTIONS.LEDGER), where("workspaceId", "==", workspaceId))
   );
-  return snap.docs.map((s) => {
+  const entries = snap.docs.map((s) => {
     const d = s.data();
     return {
       id: s.id,
@@ -449,4 +379,6 @@ export async function getLedgerForWorkspace(
       payloadSummary: d.payloadSummary ?? "",
     };
   });
+  entries.sort((a, b) => b.timestamp - a.timestamp);
+  return entries.slice(0, 50);
 }

@@ -4,57 +4,59 @@ import { RunwayLogo } from "@/components/RunwayLogo";
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden hero-gradient">
-      {/* ========== SHARED HEADER (Stitch: hero + execution) ========== */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#f0f2f4] dark:border-white/10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-6 md:px-10 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-primary">
-            <div className="bg-primary p-1.5 rounded-lg text-white">
-              <RunwayLogo className="size-6" />
-            </div>
-            <h2 className="text-[#111418] dark:text-white text-xl font-extrabold tracking-tight">
-              Runway
-            </h2>
-          </Link>
-          <nav className="hidden md:flex flex-1 justify-center gap-8">
-            <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#execution">
-              Product
-            </Link>
-            <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#features">
-              Features
-            </Link>
-            <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#insights">
-              Insights
-            </Link>
-            <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#ai">
-              AI
-            </Link>
-            <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#trust">
-              Trust
-            </Link>
-          </nav>
-          <div className="flex gap-3">
-            <Link
-              href="/signup"
-              className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold transition-all hover:bg-primary/90"
-            >
-              Try Runway free
-            </Link>
-            <Link
-              href="/login"
-              className="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-[#f0f2f4] dark:bg-white/10 text-[#111418] dark:text-white text-sm font-bold transition-all hover:bg-gray-200 dark:hover:bg-white/20"
-            >
-              Login
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* ========== 1. HERO (Stitch: hero_section) — plain image as background ========== */}
-      <main
-        className="relative min-h-[80vh] bg-cover bg-center bg-no-repeat text-center"
+      {/* Hero area: same background image behind header + content so nav has no separate background */}
+      <div
+        className="relative min-h-[80vh] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url(/hero-bg.png)" }}
       >
         <div className="absolute inset-0 bg-white/25 dark:bg-background-dark/40 pointer-events-none" aria-hidden />
+        {/* ========== SHARED HEADER — transparent, sky shows through ========== */}
+        <header className="sticky top-0 z-50 w-full border-b border-white/20 dark:border-white/10 bg-transparent px-6 md:px-10 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 text-primary">
+              <div className="bg-primary p-1.5 rounded-lg text-white">
+                <RunwayLogo className="size-6" />
+              </div>
+              <h2 className="text-[#111418] dark:text-white text-xl font-extrabold tracking-tight">
+                Runway
+              </h2>
+            </Link>
+            <nav className="hidden md:flex flex-1 justify-center gap-8">
+              <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#execution">
+                Product
+              </Link>
+              <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#features">
+                Features
+              </Link>
+              <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#insights">
+                Insights
+              </Link>
+              <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#ai">
+                AI
+              </Link>
+              <Link className="text-[#111418] dark:text-gray-300 text-sm font-semibold hover:text-primary transition-colors" href="#trust">
+                Trust
+              </Link>
+            </nav>
+            <div className="flex gap-3">
+              <Link
+                href="/signup"
+                className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold transition-all hover:bg-primary/90"
+              >
+                Try Runway free
+              </Link>
+              <Link
+                href="/login"
+                className="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-[#f0f2f4] dark:bg-white/10 text-[#111418] dark:text-white text-sm font-bold transition-all hover:bg-gray-200 dark:hover:bg-white/20"
+              >
+                Login
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* ========== 1. HERO (Stitch: hero_section) ========== */}
+      <main className="relative text-center">
         <div className="relative max-w-[1200px] mx-auto px-6 pt-20 pb-12">
         <div className="max-w-3xl mx-auto flex flex-col items-center gap-6">
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-gray-900 dark:text-white">
@@ -79,57 +81,133 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Dashboard mockup — startup semantics (Stitch hero); slides up from back */}
+        {/* Dashboard mockup — full Dreelio-style: header + 4 metric cards + chart + quick actions */}
         <div className="mt-20 relative mx-auto max-w-5xl rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden dark:border-gray-700 dark:bg-background-dark animate-slide-up-from-back opacity-0">
           <div className="h-10 bg-gray-50 border-b border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 flex items-center px-4 gap-2">
             <div className="size-3 rounded-full bg-red-400" />
             <div className="size-3 rounded-full bg-yellow-400" />
             <div className="size-3 rounded-full bg-green-400" />
           </div>
-          <div className="flex h-[500px]">
-            <aside className="w-60 border-r border-gray-100 p-6 hidden md:flex flex-col gap-8 text-left dark:border-gray-800">
-              <div className="space-y-4">
-                <div className="h-3 w-3/4 bg-gray-100 rounded-full dark:bg-gray-800" />
-                <div className="h-3 w-1/2 bg-gray-100 rounded-full dark:bg-gray-800" />
-                <div className="h-3 w-2/3 bg-primary/20 rounded-full" />
+          <div className="flex h-[520px]">
+            <aside className="w-[200px] border-r border-gray-100 p-4 hidden md:flex flex-col dark:border-gray-800">
+              <div className="flex items-center gap-2 mb-8">
+                <div className="bg-primary p-1 rounded-lg text-white">
+                  <RunwayLogo className="size-5" />
+                </div>
+                <span className="font-bold text-sm text-[#111418] dark:text-white">Runway</span>
               </div>
-              <div className="space-y-4 mt-auto">
-                <div className="h-8 w-full bg-gray-50 rounded dark:bg-gray-800" />
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-primary/10 text-primary">
+                  <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                  <span className="text-sm font-semibold">Overview</span>
+                </div>
+                <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400">
+                  <span className="material-symbols-outlined text-[18px]">update</span>
+                  <span className="text-sm font-medium">Sprints</span>
+                </div>
+                <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400">
+                  <span className="material-symbols-outlined text-[18px]">insights</span>
+                  <span className="text-sm font-medium">Analytics</span>
+                </div>
+              </div>
+              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+                <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700" />
               </div>
             </aside>
-            <div className="flex-1 p-8 text-left bg-[#fcfcfd] dark:bg-background-dark">
-              <div className="flex justify-between items-center mb-10">
+            <div className="flex-1 p-6 text-left bg-[#f5f6f8] dark:bg-background-dark min-w-0">
+              {/* Header: welcome + search + icon buttons + avatar */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
                 <div>
-                  <h3 className="text-2xl font-bold">Welcome back, Founder</h3>
-                  <p className="text-gray-500 text-sm">Your startup workspace</p>
+                  <h3 className="text-xl font-bold text-[#111418] dark:text-white">Welcome back, Founder</h3>
+                  <p className="text-[#5f6368] dark:text-gray-400 text-sm">Your startup workspace</p>
                 </div>
-                <div className="flex gap-3">
-                  <div className="size-10 rounded-full bg-gray-200 dark:bg-gray-700" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6 mb-10">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">Startup workspaces</p>
-                  <p className="text-4xl font-extrabold text-primary">3</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">Active sprints</p>
-                  <p className="text-4xl font-extrabold">2</p>
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:block h-9 w-40 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
+                  <button type="button" className="size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[18px] text-gray-500 dark:text-gray-400">insights</span>
+                  </button>
+                  <button type="button" className="size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[18px] text-gray-500 dark:text-gray-400">analytics</span>
+                  </button>
+                  <div className="size-9 rounded-full bg-gray-200 dark:bg-gray-700" />
                 </div>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex-1">
-                <div className="flex justify-between items-end mb-6">
-                  <p className="text-sm font-semibold">Execution over time</p>
-                  <span className="text-xs text-gray-400">Past 6 sprints</span>
+              {/* Four metric cards with icons */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary text-xl">task_alt</span>
+                    </div>
+                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Tasks completed</p>
+                  </div>
+                  <p className="text-2xl font-extrabold text-[#111418] dark:text-white">24</p>
+                  <p className="text-xs text-[#5f6368] dark:text-gray-500">This sprint</p>
                 </div>
-                <div className="flex items-end justify-between h-32 gap-3">
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-lg h-1/3" />
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-lg h-1/2" />
-                  <div className="w-full bg-primary rounded-t-lg h-3/4" />
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-lg h-2/3" />
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-lg h-5/6" />
-                  <div className="w-full bg-primary/40 rounded-t-lg h-2/4" />
-                  <div className="w-full bg-primary rounded-t-lg h-full" />
+                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary text-xl">flag</span>
+                    </div>
+                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Total tasks</p>
+                  </div>
+                  <p className="text-2xl font-extrabold text-primary">3</p>
+                  <p className="text-xs text-[#5f6368] dark:text-gray-500">Startup workspaces</p>
+                </div>
+                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary text-xl">update</span>
+                    </div>
+                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Sprint progress</p>
+                  </div>
+                  <p className="text-2xl font-extrabold text-[#111418] dark:text-white">2</p>
+                  <p className="text-xs text-[#5f6368] dark:text-gray-500">Active sprints</p>
+                </div>
+                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary text-xl">rate_review</span>
+                    </div>
+                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Validation entries</p>
+                  </div>
+                  <p className="text-2xl font-extrabold text-[#111418] dark:text-white">8</p>
+                  <p className="text-xs text-[#5f6368] dark:text-gray-500">Recent</p>
+                </div>
+              </div>
+              {/* Chart + Quick actions row */}
+              <div className="flex gap-4 flex-1 min-h-0">
+                <div className="flex-1 min-w-0 bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5 flex flex-col">
+                  <div className="flex justify-between items-end mb-4">
+                    <p className="text-sm font-semibold text-[#111418] dark:text-white">Execution over time</p>
+                    <span className="text-xs text-[#5f6368] dark:text-gray-400">Past 6 sprints</span>
+                  </div>
+                  <div className="flex items-end justify-between gap-2 flex-1 min-h-[100px]">
+                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-1/3" />
+                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-1/2" />
+                    <div className="flex-1 bg-primary rounded-t min-h-[20%] h-3/4" />
+                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-2/3" />
+                    <div className="flex-1 bg-primary/40 rounded-t min-h-[20%] h-5/6" />
+                    <div className="flex-1 bg-primary rounded-t min-h-[20%] h-full" />
+                  </div>
+                </div>
+                <div className="w-[180px] shrink-0 grid grid-cols-2 gap-2">
+                  <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
+                    <span className="material-symbols-outlined text-primary text-2xl">play_circle</span>
+                    <span className="text-[10px] font-semibold text-[#111418] dark:text-white">New sprint</span>
+                  </div>
+                  <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
+                    <span className="material-symbols-outlined text-primary text-2xl">rate_review</span>
+                    <span className="text-[10px] font-semibold text-[#111418] dark:text-white">Log validation</span>
+                  </div>
+                  <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
+                    <span className="material-symbols-outlined text-primary text-2xl">flag</span>
+                    <span className="text-[10px] font-semibold text-[#111418] dark:text-white">Add task</span>
+                  </div>
+                  <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
+                    <span className="material-symbols-outlined text-primary text-2xl">add_task</span>
+                    <span className="text-[10px] font-semibold text-[#111418] dark:text-white">Add task</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -166,6 +244,7 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
+      </div>
 
       {/* ========== 2. EXECUTION SECTION (Stitch: execution_section) ========== */}
       <section id="execution" className="bg-background-light dark:bg-background-dark border-t border-[#f0f2f4] dark:border-white/10">
@@ -197,7 +276,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <p className="font-bold text-[#111418] dark:text-white">Alpha launch prep</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">MVP Milestone</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">MVP</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -256,7 +335,7 @@ export default function LandingPage() {
                   Plan, track and move your startup forward
                 </h2>
                 <p className="text-lg text-[#617589] dark:text-gray-400 leading-relaxed max-w-[540px]">
-                  Stay organized and move faster with structured workspaces designed for high-growth startups. Manage your entire execution pipeline with AI-powered insights and verifiable blockchain milestones.
+                  Stay organized and move faster with structured workspaces designed for high-growth startups. Manage your entire execution pipeline with AI-powered insights and verifiable execution records.
                 </p>
               </div>
               <div className="flex flex-col gap-10">
@@ -307,7 +386,7 @@ export default function LandingPage() {
               Built for early stage founders
             </h2>
             <p className="mt-4 text-[#617589] dark:text-slate-400 text-lg max-w-2xl mx-auto">
-              The execution layer for your startup. From seed to scale, manage every milestone with AI-enhanced precision and blockchain-grade security.
+              The execution layer for your startup. From seed to scale, manage execution with AI-enhanced precision and blockchain-grade security.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
@@ -316,7 +395,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
                   <span className="material-symbols-outlined text-primary">timeline</span>
                 </div>
-                <h3 className="text-[#111418] dark:text-white text-2xl font-bold mb-3">Execution &amp; milestone tracking</h3>
+                <h3 className="text-[#111418] dark:text-white text-2xl font-bold mb-3">Execution &amp; task tracking</h3>
                 <p className="text-[#617589] dark:text-slate-400">Track every detail from MVP to scale with automated status reporting and AI forecasting.</p>
               </div>
               <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden border border-[#f0f2f4] dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-4 shadow-inner">
@@ -383,7 +462,7 @@ export default function LandingPage() {
               </div>
               <h4 className="text-[#111418] dark:text-white text-lg font-bold mb-2">Progress</h4>
               <p className="text-[#617589] dark:text-slate-400 text-sm leading-relaxed">
-                Monitor global milestones in real-time. Transparent metrics for investors and internal stakeholders.
+                Monitor progress in real-time. Transparent metrics for investors and internal stakeholders.
               </p>
             </div>
             <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-[#dbe0e6] dark:border-slate-800 p-6 group hover:-translate-y-1 transition-all duration-300">
@@ -420,7 +499,7 @@ export default function LandingPage() {
                   Understand what&apos;s working and what isn&apos;t
                 </h2>
                 <p className="text-[#617589] dark:text-gray-400 text-lg font-normal leading-relaxed lg:max-w-[520px]">
-                  Get clear indicators of your startup&apos;s health and spot risks before they scale with our AI-driven insights layer. Monitor every milestone with blockchain-verified precision.
+                  Get clear indicators of your startup&apos;s health and spot risks before they scale with our AI-driven insights layer. Track execution with blockchain-verified precision.
                 </p>
               </div>
               <Link
@@ -440,7 +519,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-[#1c2a38] px-5 border border-[#dbe0e6] dark:border-gray-700 shadow-sm hover:border-primary cursor-default">
                   <span className="material-symbols-outlined text-primary text-[20px]">insights</span>
-                  <p className="text-[#111418] dark:text-gray-200 text-sm font-semibold">Milestones</p>
+                  <p className="text-[#111418] dark:text-gray-200 text-sm font-semibold">Tasks</p>
                 </div>
                 <div className="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-[#1c2a38] px-5 border border-[#dbe0e6] dark:border-gray-700 shadow-sm hover:border-primary cursor-default">
                   <span className="material-symbols-outlined text-primary text-[20px]">hub</span>
@@ -465,7 +544,7 @@ export default function LandingPage() {
                       <p className="text-[#111418] dark:text-white text-xl font-extrabold">84%</p>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <p className="text-[#617589] dark:text-gray-400 text-[11px] font-bold uppercase tracking-wider">Milestones</p>
+                      <p className="text-[#617589] dark:text-gray-400 text-[11px] font-bold uppercase tracking-wider">Tasks</p>
                       <p className="text-[#111418] dark:text-white text-xl font-extrabold">12/15</p>
                     </div>
                     <div className="flex flex-col gap-1">
@@ -554,7 +633,7 @@ export default function LandingPage() {
               </div>
               <h3 className="mb-3 text-xl font-bold text-[#111418] dark:text-white">AI-assisted execution insights</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Identify stalled milestones, repeated blockers, and execution risks based on task and sprint data. Our models predict delays before they happen.
+                Identify stalled tasks, repeated blockers, and execution risks based on task and sprint data. Our models predict delays before they happen.
               </p>
               <div className="mt-8 flex items-center gap-2 text-sm font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                 Learn more <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -583,26 +662,6 @@ export default function LandingPage() {
               <div className="mt-8 flex items-center gap-2 text-sm font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                 View samples <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </div>
-            </div>
-          </div>
-        </div>
-        <div className="mx-auto max-w-7xl px-6 pb-24">
-          <div className="relative overflow-hidden rounded-3xl bg-[#111418] dark:bg-primary/5 p-8 md:p-16 text-center border border-white/10">
-            <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
-            <h2 className="relative z-10 mb-6 text-3xl font-extrabold text-white md:text-5xl">
-              Experience the future of startup execution
-            </h2>
-            <p className="relative z-10 mx-auto mb-10 max-w-2xl text-lg text-gray-400">
-              Join the next generation of founders using AI and Blockchain to scale faster.
-            </p>
-            <div className="relative z-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/signup" className="w-full sm:w-auto flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-bold text-white transition-all hover:scale-105 active:scale-95">
-                Get Started Now
-              </Link>
-              <Link href="#trust" className="w-full sm:w-auto flex h-12 items-center justify-center rounded-lg bg-white/10 px-8 text-base font-bold text-white backdrop-blur-md transition-all hover:bg-white/20">
-                Schedule Demo
-              </Link>
             </div>
           </div>
         </div>
@@ -714,7 +773,7 @@ export default function LandingPage() {
             <ul className="flex flex-col gap-4 text-sm text-[#617589] dark:text-gray-400">
               <li><Link className="hover:text-primary transition-colors" href="#features">Features</Link></li>
               <li><Link className="hover:text-primary transition-colors" href="/dashboard">Dashboard</Link></li>
-              <li><a className="hover:text-primary transition-colors" href="#">Pricing</a></li>
+              <li><Link className="hover:text-primary transition-colors" href="/upgrade">Pricing</Link></li>
             </ul>
           </div>
           <div>

@@ -6,12 +6,28 @@ import { usePathname, useRouter } from "next/navigation";
 import { RunwayLogo } from "@/components/RunwayLogo";
 import { useEffect } from "react";
 
+const SIDEBAR_NAV = [
+  { href: "/dashboard", label: "Workspaces", icon: "grid_view" },
+] as const;
+
+const WORKSPACE_NAV = [
+  { label: "Overview", icon: "home", pathPart: "" },
+  { label: "Sprints", icon: "update", pathPart: "/sprints" },
+  { label: "Analytics", icon: "analytics", pathPart: "/analytics" },
+  { label: "Team", icon: "groups", pathPart: "/team" },
+  { label: "Integrations", icon: "hub", pathPart: "/integrations" },
+  { label: "Investor view", icon: "summarize", pathPart: "/investor" },
+  { label: "Ledger", icon: "account_tree", pathPart: "/ledger" },
+] as const;
+
 export default function DashboardLayout({
   children,
 }: { children: React.ReactNode }) {
   const { user, loading, signOut, isConfigured } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const segments = pathname.split("/").filter(Boolean);
+  const workspaceId = segments[1];
 
   useEffect(() => {
     if (loading) return;
@@ -23,7 +39,7 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f6f8] dark:bg-background-dark">
         <p className="text-gray-500">Loading…</p>
       </div>
     );
@@ -33,60 +49,86 @@ export default function DashboardLayout({
     return null;
   }
 
-  const workspaceId = pathname.split("/")[2];
-  const nav = [
-    { href: "/dashboard", label: "Workspaces" },
-    ...(workspaceId
-      ? [
-          { href: `/dashboard/${workspaceId}`, label: "Overview" },
-          { href: `/dashboard/${workspaceId}/sprints`, label: "Sprints" },
-          { href: `/dashboard/${workspaceId}/analytics`, label: "Analytics" },
-          { href: `/dashboard/${workspaceId}/investor`, label: "Investor view" },
-          { href: `/dashboard/${workspaceId}/ledger`, label: "Ledger" },
-        ]
-      : []),
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col bg-background-light dark:bg-background-dark">
-      <header className="sticky top-0 z-50 border-b border-[#f0f2f4] dark:border-white/10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-6 md:px-10 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 text-primary">
-            <RunwayLogo className="size-6" />
-            <h2 className="text-[#111418] dark:text-white text-xl font-extrabold tracking-tight">
+    <div className="min-h-screen flex bg-[#f5f6f8] dark:bg-background-dark">
+      {/* Left sidebar - Dreelio style */}
+      <aside className="w-[240px] min-w-[240px] flex flex-col border-r border-[#e8eaed] dark:border-white/10 bg-white dark:bg-[#1a2530]">
+        <div className="p-4 border-b border-[#e8eaed] dark:border-white/10">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
+              <RunwayLogo className="size-5" />
+            </div>
+            <span className="text-lg font-bold text-[#111418] dark:text-white tracking-tight">
               Runway
-            </h2>
-          </Link>
-          <nav className="hidden md:flex gap-6">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`text-sm font-semibold transition-colors ${
-                  pathname === item.href
-                    ? "text-primary"
-                    : "text-[#111418] dark:text-gray-300 hover:text-primary"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500 truncate max-w-[120px]">
-              {user.email}
             </span>
-            <button
-              onClick={() => signOut().then(() => router.push("/"))}
-              className="rounded-lg h-10 px-4 bg-[#f0f2f4] dark:bg-white/10 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/20"
-            >
-              Sign out
-            </button>
-          </div>
+          </Link>
         </div>
-      </header>
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 md:px-10 py-8">
-        {children}
+        <nav className="flex-1 p-3 space-y-0.5">
+          <Link
+            href="/dashboard"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              pathname === "/dashboard"
+                ? "bg-primary/10 text-primary"
+                : "text-[#5f6368] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-[#111418] dark:hover:text-white"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[22px]">grid_view</span>
+            Workspaces
+          </Link>
+          {workspaceId && (
+            <>
+              <div className="pt-4 pb-1 px-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#9aa0a6] dark:text-gray-500">
+                  Workspace
+                </p>
+              </div>
+              {WORKSPACE_NAV.map((item) => {
+                const href = `/dashboard/${workspaceId}${item.pathPart}`;
+                const isActive = pathname === href;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-[#5f6368] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-[#111418] dark:hover:text-white"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </>
+          )}
+        </nav>
+        <div className="p-3 border-t border-[#e8eaed] dark:border-white/10">
+          <Link
+            href="/upgrade"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#5f6368] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-[#111418] dark:hover:text-white mb-1"
+          >
+            <span className="material-symbols-outlined text-[22px]">workspace_premium</span>
+            Upgrade
+          </Link>
+          <div className="px-3 py-2 text-xs text-[#9aa0a6] dark:text-gray-500 truncate">
+            {user.email}
+          </div>
+          <button
+            onClick={() => signOut().then(() => router.push("/"))}
+            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#5f6368] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-[#111418] dark:hover:text-white"
+          >
+            <span className="material-symbols-outlined text-[22px]">logout</span>
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content area */}
+      <main className="flex-1 flex flex-col min-w-0 bg-[#f5f6f8] dark:bg-background-dark">
+        <div className="flex-1 p-6 md:p-8 overflow-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
