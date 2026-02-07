@@ -14,6 +14,7 @@ import {
   createMilestone,
   createTask,
   updateMilestone,
+  updateTask,
 } from "@/lib/firestore";
 import { getExecutionInsights, getValidationInsights } from "@/lib/ai-mock";
 import { notifySlack } from "@/lib/slack-notify-client";
@@ -47,8 +48,23 @@ export default function WorkspaceOverviewPage() {
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
   const [expandedMilestoneIds, setExpandedMilestoneIds] = useState<Set<string>>(new Set());
   const [validationLinkCopiedId, setValidationLinkCopiedId] = useState<string | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   type ChartMetricType = "sprint_completion" | "tasks_done" | "validations";
   const [chartMetric, setChartMetric] = useState<ChartMetricType>("sprint_completion");
+
+  const handleTaskStatusToggle = async (taskId: string, currentStatus: Task["status"]) => {
+    if (!canWrite || updatingTaskId !== null) return;
+    const nextStatus: Task["status"] = currentStatus === "done" ? "todo" : "done";
+    setUpdatingTaskId(taskId);
+    try {
+      await updateTask(taskId, { status: nextStatus });
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: nextStatus, updatedAt: Date.now() } : t))
+      );
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
 
   const handleMilestoneStatusChange = async (milestoneId: string, status: MilestoneStatus) => {
     if (!canWrite) return;
@@ -666,15 +682,31 @@ export default function WorkspaceOverviewPage() {
                         <ul className="space-y-1.5">
                           {milestoneTasks.map((t) => (
                             <li key={t.id} className="flex items-center gap-2 text-sm">
-                              <span className={`material-symbols-outlined text-lg ${
-                                t.status === "done" ? "text-green-600 dark:text-green-400" : "text-gray-400"
-                              }`}>
-                                {t.status === "done" ? "check_circle" : "radio_button_unchecked"}
-                              </span>
+                              {canWrite ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleTaskStatusToggle(t.id, t.status); }}
+                                  disabled={updatingTaskId === t.id}
+                                  className="shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50"
+                                  aria-label={t.status === "done" ? "Mark as to do" : "Mark as done"}
+                                >
+                                  <span className={`material-symbols-outlined text-lg ${
+                                    t.status === "done" ? "text-green-600 dark:text-green-400" : "text-gray-400"
+                                  }`}>
+                                    {t.status === "done" ? "check_circle" : "radio_button_unchecked"}
+                                  </span>
+                                </button>
+                              ) : (
+                                <span className={`material-symbols-outlined text-lg shrink-0 ${
+                                  t.status === "done" ? "text-green-600 dark:text-green-400" : "text-gray-400"
+                                }`}>
+                                  {t.status === "done" ? "check_circle" : "radio_button_unchecked"}
+                                </span>
+                              )}
                               <span className={t.status === "done" ? "text-gray-500 dark:text-gray-400 line-through" : "text-[#111418] dark:text-white"}>
                                 {t.title}
                               </span>
-                              <span className="text-xs text-[#5f6368] dark:text-gray-400 uppercase">{t.status.replace("_", " ")}</span>
+                              <span className="text-xs text-[#5f6368] dark:text-gray-400 uppercase shrink-0">{t.status.replace("_", " ")}</span>
                             </li>
                           ))}
                         </ul>
