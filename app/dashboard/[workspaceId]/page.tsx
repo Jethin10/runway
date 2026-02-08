@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ import type {
   Sprint,
   ValidationEntry,
 } from "@/lib/types";
+import { useScrollAnimation } from "@/lib/useScrollAnimation";
 
 export default function WorkspaceOverviewPage() {
   const params = useParams();
@@ -281,8 +282,8 @@ export default function WorkspaceOverviewPage() {
   const sprintWorkDone =
     currentSprintTasks.length > 0
       ? Math.round(
-          (currentSprintTasks.filter((t) => t.status === "done").length / currentSprintTasks.length) * 100
-        )
+        (currentSprintTasks.filter((t) => t.status === "done").length / currentSprintTasks.length) * 100
+      )
       : 0;
   const sprintWorkDoneCount = currentSprintTasks.filter((t) => t.status === "done").length;
   const sprintWorkTotal = currentSprintTasks.length;
@@ -300,6 +301,14 @@ export default function WorkspaceOverviewPage() {
     const done = list.filter((t) => t.status === "done").length;
     return { list, done, total: list.length };
   }
+
+  // Scroll animation refs
+  const [headerRef, headerVisible] = useScrollAnimation<HTMLDivElement>();
+  const [cardsRef, cardsVisible] = useScrollAnimation<HTMLDivElement>();
+  const [chartRef, chartVisible] = useScrollAnimation<HTMLDivElement>();
+  const [sprintRef, sprintVisible] = useScrollAnimation<HTMLDivElement>();
+  const [milestonesRef, milestonesVisible] = useScrollAnimation<HTMLDivElement>();
+  const [validationRef, validationVisible] = useScrollAnimation<HTMLDivElement>();
 
   function copyValidationLink(milestoneId: string) {
     const url = `${typeof window !== "undefined" ? window.location.origin : ""}/validate/${workspaceId}/${milestoneId}`;
@@ -332,13 +341,20 @@ export default function WorkspaceOverviewPage() {
         </div>
       )}
 
-      <div>
+      <div
+        ref={headerRef}
+        className={`scroll-animate fade-up ${headerVisible ? 'visible' : ''}`}
+      >
         <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Welcome back, {firstName}</h1>
         <p className="text-[#5f6368] dark:text-gray-400 text-sm mt-0.5">Your startup workspace</p>
       </div>
 
       {/* Metric cards — clearer labels, more spacing */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+      <div
+        ref={cardsRef}
+        className={`grid grid-cols-2 lg:grid-cols-4 gap-5 scroll-animate fade-up ${cardsVisible ? 'visible' : ''}`}
+        style={{ animationDelay: '100ms' }}
+      >
         <div className="bg-white dark:bg-[#1a2530] rounded-2xl border border-[#e8eaed] dark:border-white/5 p-5 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="p-2 rounded-xl bg-primary/10">
@@ -388,14 +404,18 @@ export default function WorkspaceOverviewPage() {
             {validations.length === 0
               ? "No feedback yet"
               : externalValidations.length > 0
-              ? `${internalValidations.length} internal · ${externalValidations.length} via link`
-              : "internal only"}
+                ? `${internalValidations.length} internal · ${externalValidations.length} via link`
+                : "internal only"}
           </p>
         </div>
       </div>
 
       {/* Chart + Quick actions row */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div
+        ref={chartRef}
+        className={`grid lg:grid-cols-3 gap-6 scroll-animate fade-up ${chartVisible ? 'visible' : ''}`}
+        style={{ animationDelay: '200ms' }}
+      >
         <div className="lg:col-span-2 bg-white dark:bg-[#1a2530] rounded-2xl border border-[#e8eaed] dark:border-white/5 p-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
             <h2 className="text-lg font-bold text-[#111418] dark:text-white">Execution over time</h2>
@@ -539,7 +559,11 @@ export default function WorkspaceOverviewPage() {
 
       {/* Current sprint — prominent section with progress */}
       {currentSprint && (
-        <div className="bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/20 dark:border-primary/30 p-6">
+        <div
+          ref={sprintRef}
+          className={`bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/20 dark:border-primary/30 p-6 scroll-animate fade-up ${sprintVisible ? 'visible' : ''}`}
+          style={{ animationDelay: '150ms' }}
+        >
           <h2 className="text-xl font-bold text-[#111418] dark:text-white mb-1">Current sprint</h2>
           <p className="text-sm text-[#5f6368] dark:text-gray-400 mb-4">
             {currentSprint.weekStartDate} → {currentSprint.weekEndDate}
@@ -617,7 +641,12 @@ export default function WorkspaceOverviewPage() {
       )}
 
       {/* Milestones — expandable with tasks and progress */}
-      <div id="milestones" className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 scroll-mt-4">
+      <div
+        id="milestones"
+        ref={milestonesRef}
+        className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 scroll-mt-4 scroll-animate fade-up ${milestonesVisible ? 'visible' : ''}`}
+        style={{ animationDelay: '200ms' }}
+      >
         <h2 className="text-lg font-bold text-[#111418] dark:text-white mb-4">Milestones</h2>
         <div className="space-y-2">
           {milestones.length === 0 ? (
@@ -643,13 +672,12 @@ export default function WorkspaceOverviewPage() {
                         {isExpanded ? "expand_less" : "expand_more"}
                       </span>
                       <div
-                        className={`w-2 h-2 shrink-0 rounded-full ${
-                          m.status === "completed"
+                        className={`w-2 h-2 shrink-0 rounded-full ${m.status === "completed"
                             ? "bg-green-500"
                             : m.status === "active"
-                            ? "bg-primary"
-                            : "bg-gray-400"
-                        }`}
+                              ? "bg-primary"
+                              : "bg-gray-400"
+                          }`}
                       />
                       <span className="font-medium text-[#111418] dark:text-white truncate">{m.title}</span>
                       <span className="text-xs text-[#5f6368] dark:text-gray-400 shrink-0">
@@ -690,16 +718,14 @@ export default function WorkspaceOverviewPage() {
                                   className="shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50"
                                   aria-label={t.status === "done" ? "Mark as to do" : "Mark as done"}
                                 >
-                                  <span className={`material-symbols-outlined text-lg ${
-                                    t.status === "done" ? "text-green-600 dark:text-green-400" : "text-gray-400"
-                                  }`}>
+                                  <span className={`material-symbols-outlined text-lg ${t.status === "done" ? "text-green-600 dark:text-green-400" : "text-gray-400"
+                                    }`}>
                                     {t.status === "done" ? "check_circle" : "radio_button_unchecked"}
                                   </span>
                                 </button>
                               ) : (
-                                <span className={`material-symbols-outlined text-lg shrink-0 ${
-                                  t.status === "done" ? "text-green-600 dark:text-green-400" : "text-gray-400"
-                                }`}>
+                                <span className={`material-symbols-outlined text-lg shrink-0 ${t.status === "done" ? "text-green-600 dark:text-green-400" : "text-gray-400"
+                                  }`}>
                                   {t.status === "done" ? "check_circle" : "radio_button_unchecked"}
                                 </span>
                               )}
@@ -737,7 +763,11 @@ export default function WorkspaceOverviewPage() {
 
       {/* Validation: external feedback vs internal notes */}
       {(externalValidations.length > 0 || internalValidations.length > 0) && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+        <div
+          ref={validationRef}
+          className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 scroll-animate fade-up ${validationVisible ? 'visible' : ''}`}
+          style={{ animationDelay: '250ms' }}
+        >
           <h2 className="text-lg font-bold text-[#111418] dark:text-white mb-4">Validation</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             External feedback from the validation link; internal notes from the team.

@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced interaction feel */
+button,
+a,
+[role="button"] {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
 :root {
   --primary: #137fec;
   --background-light: #f6f7f8;
@@ -13,19 +25,15 @@ body {
 }
 
 .hero-gradient {
-  background: radial-gradient(
-    circle at 50% -20%,
-    rgba(19, 127, 236, 0.08) 0%,
-    rgba(255, 255, 255, 0) 60%
-  );
+  background: radial-gradient(circle at 50% -20%,
+      rgba(19, 127, 236, 0.08) 0%,
+      rgba(255, 255, 255, 0) 60%);
 }
 
 .dark .hero-gradient {
-  background: radial-gradient(
-    circle at 50% -20%,
-    rgba(19, 127, 236, 0.12) 0%,
-    transparent 60%
-  );
+  background: radial-gradient(circle at 50% -20%,
+      rgba(19, 127, 236, 0.12) 0%,
+      transparent 60%);
 }
 
 .grid-bg {
@@ -52,6 +60,7 @@ body {
     opacity: 0;
     transform: translateY(120px) scale(0.92) perspective(800px) rotateX(12deg);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1) perspective(800px) rotateX(0deg);
@@ -61,4 +70,109 @@ body {
 .animate-slide-up-from-back {
   animation: slide-up-from-back 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transform-origin: center bottom;
+}
+
+/* Scroll-triggered animations */
+@keyframes scroll-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scroll-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scroll-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scroll-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Base state for animated elements (hidden) */
+.scroll-animate {
+  opacity: 0;
+}
+
+/* Visible state - triggers animation */
+.scroll-animate.visible {
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scroll-animate.visible.fade-up {
+  animation-name: scroll-fade-up;
+  animation-duration: 0.6s;
+}
+
+.scroll-animate.visible.fade-in {
+  animation-name: scroll-fade-in;
+  animation-duration: 0.5s;
+}
+
+.scroll-animate.visible.slide-left {
+  animation-name: scroll-slide-left;
+  animation-duration: 0.6s;
+}
+
+.scroll-animate.visible.slide-right {
+  animation-name: scroll-slide-right;
+  animation-duration: 0.6s;
+}
+
+/* Stagger delay utilities */
+.stagger-1 {
+  animation-delay: 0ms;
+}
+
+.stagger-2 {
+  animation-delay: 100ms;
+}
+
+.stagger-3 {
+  animation-delay: 200ms;
+}
+
+.stagger-4 {
+  animation-delay: 300ms;
+}
+
+.stagger-5 {
+  animation-delay: 400ms;
+}
+
+.stagger-6 {
+  animation-delay: 500ms;
 }

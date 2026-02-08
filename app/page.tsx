@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { RunwayLogo } from "@/components/RunwayLogo";
+import { ParallaxHero } from "@/components/ParallaxHero";
+import { AnimatedHeroContent, AnimatedSection, IntegrationLogo } from "@/components/AnimatedLanding";
 
 export default function LandingPage() {
   return (
@@ -56,190 +58,158 @@ export default function LandingPage() {
         </header>
 
         {/* ========== 1. HERO (Stitch: hero_section) ========== */}
-      <main className="relative text-center">
-        <div className="relative max-w-[1200px] mx-auto px-6 pt-20 pb-12">
-        <div className="max-w-3xl mx-auto flex flex-col items-center gap-6">
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-gray-900 dark:text-white">
-            Give your startup a real Runway
-          </h1>
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 font-medium leading-relaxed max-w-2xl">
-            Plan weekly goals, follow through on them, and build a clear record of execution because progress should be visible, not assumed.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Link
-              href="/signup"
-              className="bg-black dark:bg-white dark:text-black text-white px-8 py-4 rounded-xl text-lg font-bold transition-transform hover:scale-105 text-center"
-            >
-              Try Runway free
-            </Link>
-            <Link
-              href="#features"
-              className="border-2 border-gray-200 dark:border-gray-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center"
-            >
-              See features
-            </Link>
-          </div>
-        </div>
+        <main className="relative text-center">
+          <div className="relative max-w-[1200px] mx-auto px-6 pt-20 pb-12">
+            <AnimatedHeroContent />
 
-        {/* Dashboard mockup — full Dreelio-style: header + 4 metric cards + chart + quick actions */}
-        <div className="mt-20 relative mx-auto max-w-5xl rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden dark:border-gray-700 dark:bg-background-dark animate-slide-up-from-back opacity-0">
-          <div className="h-10 bg-gray-50 border-b border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 flex items-center px-4 gap-2">
-            <div className="size-3 rounded-full bg-red-400" />
-            <div className="size-3 rounded-full bg-yellow-400" />
-            <div className="size-3 rounded-full bg-green-400" />
-          </div>
-          <div className="flex h-[520px]">
-            <aside className="w-[200px] border-r border-gray-100 p-4 hidden md:flex flex-col dark:border-gray-800">
-              <div className="flex items-center gap-2 mb-8">
-                <div className="bg-primary p-1 rounded-lg text-white">
-                  <RunwayLogo className="size-5" />
+            {/* Dashboard mockup — full Dreelio-style: header + 4 metric cards + chart + quick actions */}
+            <ParallaxHero className="mt-20 relative mx-auto max-w-5xl">
+              <div className="rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden dark:border-gray-700 dark:bg-background-dark">
+                <div className="h-10 bg-gray-50 border-b border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 flex items-center px-4 gap-2">
+                  <div className="size-3 rounded-full bg-red-400" />
+                  <div className="size-3 rounded-full bg-yellow-400" />
+                  <div className="size-3 rounded-full bg-green-400" />
                 </div>
-                <span className="font-bold text-sm text-[#111418] dark:text-white">Runway</span>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-[18px]">dashboard</span>
-                  <span className="text-sm font-semibold">Overview</span>
-                </div>
-                <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400">
-                  <span className="material-symbols-outlined text-[18px]">update</span>
-                  <span className="text-sm font-medium">Sprints</span>
-                </div>
-                <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400">
-                  <span className="material-symbols-outlined text-[18px]">insights</span>
-                  <span className="text-sm font-medium">Analytics</span>
-                </div>
-              </div>
-              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
-                <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700" />
-              </div>
-            </aside>
-            <div className="flex-1 p-6 text-left bg-[#f5f6f8] dark:bg-background-dark min-w-0">
-              {/* Header: welcome + search + icon buttons + avatar */}
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <div>
-                  <h3 className="text-xl font-bold text-[#111418] dark:text-white">Welcome back, Founder</h3>
-                  <p className="text-[#5f6368] dark:text-gray-400 text-sm">Your startup workspace</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="hidden sm:block h-9 w-40 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
-                  <button type="button" className="size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[18px] text-gray-500 dark:text-gray-400">insights</span>
-                  </button>
-                  <button type="button" className="size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[18px] text-gray-500 dark:text-gray-400">analytics</span>
-                  </button>
-                  <div className="size-9 rounded-full bg-gray-200 dark:bg-gray-700" />
-                </div>
-              </div>
-              {/* Four metric cards with icons */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-xl">task_alt</span>
+                <div className="flex h-[520px]">
+                  <aside className="w-[200px] border-r border-gray-100 p-4 hidden md:flex flex-col dark:border-gray-800">
+                    <div className="flex items-center gap-2 mb-8">
+                      <div className="bg-primary p-1 rounded-lg text-white">
+                        <RunwayLogo className="size-5" />
+                      </div>
+                      <span className="font-bold text-sm text-[#111418] dark:text-white">Runway</span>
                     </div>
-                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Tasks completed</p>
-                  </div>
-                  <p className="text-2xl font-extrabold text-[#111418] dark:text-white">24</p>
-                  <p className="text-xs text-[#5f6368] dark:text-gray-500">This sprint</p>
-                </div>
-                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-xl">flag</span>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-primary/10 text-primary">
+                        <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                        <span className="text-sm font-semibold">Overview</span>
+                      </div>
+                      <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400">
+                        <span className="material-symbols-outlined text-[18px]">update</span>
+                        <span className="text-sm font-medium">Sprints</span>
+                      </div>
+                      <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400">
+                        <span className="material-symbols-outlined text-[18px]">insights</span>
+                        <span className="text-sm font-medium">Analytics</span>
+                      </div>
                     </div>
-                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Milestones</p>
-                  </div>
-                  <p className="text-2xl font-extrabold text-primary">3</p>
-                  <p className="text-xs text-[#5f6368] dark:text-gray-500">Startup workspaces</p>
-                </div>
-                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-xl">update</span>
+                    <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+                      <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700" />
                     </div>
-                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Sprint progress</p>
-                  </div>
-                  <p className="text-2xl font-extrabold text-[#111418] dark:text-white">2</p>
-                  <p className="text-xs text-[#5f6368] dark:text-gray-500">Active sprints</p>
-                </div>
-                <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-xl">rate_review</span>
+                  </aside>
+                  <div className="flex-1 p-6 text-left bg-[#f5f6f8] dark:bg-background-dark min-w-0">
+                    {/* Header: welcome + search + icon buttons + avatar */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h3 className="text-xl font-bold text-[#111418] dark:text-white">Welcome back, Founder</h3>
+                        <p className="text-[#5f6368] dark:text-gray-400 text-sm">Your startup workspace</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="hidden sm:block h-9 w-40 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
+                        <button type="button" className="size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[18px] text-gray-500 dark:text-gray-400">insights</span>
+                        </button>
+                        <button type="button" className="size-9 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[18px] text-gray-500 dark:text-gray-400">analytics</span>
+                        </button>
+                        <div className="size-9 rounded-full bg-gray-200 dark:bg-gray-700" />
+                      </div>
                     </div>
-                    <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Validation entries</p>
+                    {/* Four metric cards with icons */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-primary text-xl">task_alt</span>
+                          </div>
+                          <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Tasks completed</p>
+                        </div>
+                        <p className="text-2xl font-extrabold text-[#111418] dark:text-white">24</p>
+                        <p className="text-xs text-[#5f6368] dark:text-gray-500">This sprint</p>
+                      </div>
+                      <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-primary text-xl">flag</span>
+                          </div>
+                          <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Milestones</p>
+                        </div>
+                        <p className="text-2xl font-extrabold text-primary">3</p>
+                        <p className="text-xs text-[#5f6368] dark:text-gray-500">Startup workspaces</p>
+                      </div>
+                      <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-primary text-xl">update</span>
+                          </div>
+                          <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Sprint progress</p>
+                        </div>
+                        <p className="text-2xl font-extrabold text-[#111418] dark:text-white">2</p>
+                        <p className="text-xs text-[#5f6368] dark:text-gray-500">Active sprints</p>
+                      </div>
+                      <div className="bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-primary text-xl">rate_review</span>
+                          </div>
+                          <p className="text-xs font-medium text-[#5f6368] dark:text-gray-400">Validation entries</p>
+                        </div>
+                        <p className="text-2xl font-extrabold text-[#111418] dark:text-white">8</p>
+                        <p className="text-xs text-[#5f6368] dark:text-gray-500">Recent</p>
+                      </div>
+                    </div>
+                    {/* Chart + Quick actions row */}
+                    <div className="flex gap-4 flex-1 min-h-0">
+                      <div className="flex-1 min-w-0 bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5 flex flex-col">
+                        <div className="flex justify-between items-end mb-4">
+                          <p className="text-sm font-semibold text-[#111418] dark:text-white">Execution over time</p>
+                          <span className="text-xs text-[#5f6368] dark:text-gray-400">Past 6 sprints</span>
+                        </div>
+                        <div className="flex items-end justify-between gap-2 flex-1 min-h-[100px]">
+                          <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-1/3" />
+                          <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-1/2" />
+                          <div className="flex-1 bg-primary rounded-t min-h-[20%] h-3/4" />
+                          <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-2/3" />
+                          <div className="flex-1 bg-primary/40 rounded-t min-h-[20%] h-5/6" />
+                          <div className="flex-1 bg-primary rounded-t min-h-[20%] h-full" />
+                        </div>
+                      </div>
+                      <div className="w-[180px] shrink-0 grid grid-cols-2 gap-2">
+                        <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
+                          <span className="material-symbols-outlined text-primary text-2xl">play_circle</span>
+                          <span className="text-[10px] font-semibold text-[#111418] dark:text-white">New sprint</span>
+                        </div>
+                        <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
+                          <span className="material-symbols-outlined text-primary text-2xl">flag</span>
+                          <span className="text-[10px] font-semibold text-[#111418] dark:text-white">Add milestone</span>
+                        </div>
+                        <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
+                          <span className="material-symbols-outlined text-primary text-2xl">add_task</span>
+                          <span className="text-[10px] font-semibold text-[#111418] dark:text-white">Add task</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-2xl font-extrabold text-[#111418] dark:text-white">8</p>
-                  <p className="text-xs text-[#5f6368] dark:text-gray-500">Recent</p>
                 </div>
               </div>
-              {/* Chart + Quick actions row */}
-              <div className="flex gap-4 flex-1 min-h-0">
-                <div className="flex-1 min-w-0 bg-white dark:bg-[#1a2530] p-4 rounded-2xl shadow-sm border border-[#e8eaed] dark:border-white/5 flex flex-col">
-                  <div className="flex justify-between items-end mb-4">
-                    <p className="text-sm font-semibold text-[#111418] dark:text-white">Execution over time</p>
-                    <span className="text-xs text-[#5f6368] dark:text-gray-400">Past 6 sprints</span>
-                  </div>
-                  <div className="flex items-end justify-between gap-2 flex-1 min-h-[100px]">
-                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-1/3" />
-                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-1/2" />
-                    <div className="flex-1 bg-primary rounded-t min-h-[20%] h-3/4" />
-                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-t min-h-[20%] h-2/3" />
-                    <div className="flex-1 bg-primary/40 rounded-t min-h-[20%] h-5/6" />
-                    <div className="flex-1 bg-primary rounded-t min-h-[20%] h-full" />
-                  </div>
-                </div>
-                <div className="w-[180px] shrink-0 grid grid-cols-2 gap-2">
-                  <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
-                    <span className="material-symbols-outlined text-primary text-2xl">play_circle</span>
-                    <span className="text-[10px] font-semibold text-[#111418] dark:text-white">New sprint</span>
-                  </div>
-                  <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
-                    <span className="material-symbols-outlined text-primary text-2xl">flag</span>
-                    <span className="text-[10px] font-semibold text-[#111418] dark:text-white">Add milestone</span>
-                  </div>
-                  <div className="bg-white dark:bg-[#1a2530] p-3 rounded-xl border border-[#e8eaed] dark:border-white/5 shadow-sm flex flex-col items-center justify-center gap-1 text-center">
-                    <span className="material-symbols-outlined text-primary text-2xl">add_task</span>
-                    <span className="text-[10px] font-semibold text-[#111418] dark:text-white">Add task</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        </div>
+            </ParallaxHero>
 
-        {/* Integrations */}
-        <section className="max-w-[1200px] mx-auto px-6 py-20">
-          <h4 className="text-center text-xs font-bold uppercase tracking-[0.2em] text-[#5f6368] dark:text-gray-400 mb-12">
-            Use your favourite integrations
-          </h4>
-          <div className="flex flex-wrap justify-center items-center gap-10 lg:gap-16">
-            <div className="flex items-center gap-2 text-[#111418] dark:text-white">
-              <span className="material-symbols-outlined text-2xl text-primary">hub</span>
-              <span className="text-lg font-semibold tracking-tight">Slack</span>
-            </div>
-            <div className="flex items-center gap-2 text-[#111418] dark:text-white">
-              <span className="material-symbols-outlined text-2xl text-primary">task_alt</span>
-              <span className="text-lg font-semibold tracking-tight">Jira</span>
-            </div>
-            <div className="flex items-center gap-2 text-[#111418] dark:text-white">
-              <span className="material-symbols-outlined text-2xl text-primary">videocam</span>
-              <span className="text-lg font-semibold tracking-tight">Loom</span>
-            </div>
-            <div className="flex items-center gap-2 text-[#111418] dark:text-white">
-              <span className="material-symbols-outlined text-2xl text-primary">code</span>
-              <span className="text-lg font-semibold tracking-tight">GitHub</span>
-            </div>
-            <div className="flex items-center gap-2 text-[#111418] dark:text-white">
-              <span className="material-symbols-outlined text-2xl text-primary">description</span>
-              <span className="text-lg font-semibold tracking-tight">Notion</span>
-            </div>
+            {/* Integrations */}
+            <section className="max-w-[1200px] mx-auto px-6 py-20">
+              <AnimatedSection delay={0}>
+                <h4 className="text-center text-xs font-bold uppercase tracking-[0.2em] text-[#5f6368] dark:text-gray-400 mb-12">
+                  Use your favourite integrations
+                </h4>
+              </AnimatedSection>
+              <div className="flex flex-wrap justify-center items-center gap-10 lg:gap-16">
+                <IntegrationLogo icon="hub" name="Slack" delay={100} />
+                <IntegrationLogo icon="task_alt" name="Jira" delay={200} />
+                <IntegrationLogo icon="videocam" name="Loom" delay={300} />
+                <IntegrationLogo icon="code" name="GitHub" delay={400} />
+                <IntegrationLogo icon="description" name="Notion" delay={500} />
+              </div>
+            </section>
           </div>
-        </section>
-      </main>
+        </main>
       </div>
 
       {/* ========== 2. EXECUTION SECTION (Stitch: execution_section) ========== */}
