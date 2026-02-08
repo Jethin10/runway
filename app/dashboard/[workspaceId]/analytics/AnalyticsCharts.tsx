@@ -44,9 +44,10 @@ export function TasksChart({ data }: { data: TasksDataPoint[] }) {
             <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "#6b7280" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
             <Tooltip
               contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
-              formatter={(value: number, _name: string, props: { payload: { completed?: number; total?: number } }) => {
-                const p = props.payload;
-                return [`${value}%${p.total != null ? ` (${p.completed}/${p.total} tasks)` : ""}`, "Completion"];
+              formatter={(value, _name, props) => {
+                const p = props?.payload;
+                const v = typeof value === "number" ? value : 0;
+                return [`${v}%${p?.total != null ? ` (${p.completed ?? 0}/${p.total} tasks)` : ""}`, "Completion"];
               }}
               labelFormatter={(_, payload) => payload[0]?.payload?.fullLabel ?? ""}
             />
@@ -77,7 +78,7 @@ export function ValidationsChart({ data }: { data: ValidationsDataPoint[] }) {
             <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#6b7280" }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
-              formatter={(value: number) => [`${value}`, "validations"]}
+              formatter={(value) => [`${value ?? 0}`, "validations"]}
               labelFormatter={(_, payload) => payload[0]?.payload?.fullLabel ?? ""}
             />
             <Bar dataKey="count" name="Validations" fill={PRIMARY} radius={[4, 4, 0, 0]} maxBarSize={56} />
